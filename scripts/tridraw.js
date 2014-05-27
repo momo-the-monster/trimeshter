@@ -21,14 +21,14 @@ var config = {
 
 var init = function () {
 
-    renderer = new THREE.CanvasRenderer();
+    renderer = new THREE.WebGLRenderer( {antialias:true} );
 
     renderer.setSize( window.innerWidth, window.innerHeight );
     document.body.appendChild( renderer.domElement );
 
     camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
     projector = new THREE.Projector();
-    camera.position.z = 10;
+    camera.position.z = 100;
 
     scene = new THREE.Scene();
 
@@ -42,6 +42,7 @@ var init = function () {
     ];
 
     materials = buildMaterials( palette );
+//    materials = buildMaterialsFromFiles();
 
     registerListeners();
 
@@ -106,7 +107,7 @@ function buildMaterials( palette ){
 
         // Push generated texture into array as Material
         result.push(
-            new THREE.MeshLambertMaterial({
+            new THREE.MeshBasicMaterial({
                 transparent:true,
                 map:texture,
                 side: THREE.DoubleSide
