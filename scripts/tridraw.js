@@ -26,9 +26,9 @@ var init = function () {
     renderer.setSize( window.innerWidth, window.innerHeight );
     document.body.appendChild( renderer.domElement );
 
-    camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000 );
+    camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
     projector = new THREE.Projector();
-    camera.position.z = 500;
+    camera.position.z = 10;
 
     scene = new THREE.Scene();
 
@@ -54,16 +54,12 @@ var init = function () {
 
 };
 
-function cb(data){
-    console.log('data',data);
-}
-
 function buildMasterObject(){
     // Set Default objects
    var triangle = new THREE.Shape([
-        new THREE.Vector2 (-50,  0),
-        new THREE.Vector2 (50, 0),
-        new THREE.Vector2 (0,  75)
+        new THREE.Vector2 (-0.5,  -0.75),
+        new THREE.Vector2 (0.5, -0.75),
+        new THREE.Vector2 (0, 0)
     ]);
 
 //	geoTri = new THREE.ExtrudeGeometry(triangle, { amount: 10 });
