@@ -14,6 +14,11 @@ var imagePath = '../images/';
 
 var ongoingTouches = new Array();
 
+var config = {
+    mirror:false,
+    connectToSelection:true
+};
+
 var init = function () {
 
     renderer = new THREE.CanvasRenderer();
@@ -35,6 +40,7 @@ var init = function () {
         [176,243,176],
         [169,249,245]
     ];
+
     materials = buildMaterials( palette );
 
     registerListeners();
@@ -46,8 +52,11 @@ var init = function () {
     geoTri = buildMasterObject();
     matSelection = new THREE.MeshBasicMaterial( { color: 0xffffff, wireframe:true, side: THREE.DoubleSide } );
 
-    createFirstObjects();
 };
+
+function cb(data){
+    console.log('data',data);
+}
 
 function buildMasterObject(){
     // Set Default objects
@@ -162,25 +171,8 @@ function registerListeners(){
 
 }
 
-/**
- * Adds starting triangle
- * Adds all selection meshes
- */
-function createFirstObjects() {
-
-    var firstTriMesh = new THREE.Mesh( geoTri.clone(), getRandomMaterial() );
-    scene.add( firstTriMesh );
-
-    allPoints.push( geoTri.vertices[0]);
-    allPoints.push( geoTri.vertices[1]);
-    allPoints.push( geoTri.vertices[2]);
-
- //   addSelectionMeshes();
-
-}
-
 function addSelectionMeshes(touchid){
-    var numSelectionsToMake = 2;
+    var numSelectionsToMake = config.mirror ? 2 : 1;
     // Create and Add all selection meshes
     for ( var i = 0; i < numSelectionsToMake; i++ ) {
         var mesh = new THREE.Mesh( geoTri.clone(), matSelection.clone() );
@@ -225,7 +217,10 @@ function handleStart(evt) {
 
     for (var i=0; i < touches.length; i++) {
         ongoingTouches.push(copyTouch(touches[i]));
-        onStart({x: touches[i].pageX, y:touches[i].pageY, id:touches[i].identifier});
+        var event = {x: touches[i].pageX, y:touches[i].pageY, id:touches[i].identifier};
+        onStart(event);
+        onMove(event);
+        onMove(event);
     }
 }
 
@@ -323,7 +318,7 @@ function onMove( event ) {
                 var vertex = mesh.geometry.vertices[2];
                 var isEven = (i % 2 == 0);
 
-                if (isEven) {
+                if (isEven && config.mirror) {
                     var middle = window.innerWidth / 2;
                     var isRightSide = (position.x > 0);
                     var offset = Math.abs(position.x);
@@ -343,6 +338,18 @@ function onMove( event ) {
                 allPoints.forEach(function (point) {
                     sortedPoints.push({ x: point.x, y: point.y, d: point.distanceTo(vertex)});
                 });
+
+                // search through selection meshes, too
+                if(config.connectToSelection){
+                    selectionMeshes.forEach(function (mesh){
+                        if(mesh.touchid != event.id){
+                            for(var i = 0; i < 3; i++){
+                                var point = mesh.geometry.vertices[i];
+                                sortedPoints.push({x: point.x, y:point.y, d:point.distanceTo(vertex)});
+                            }
+                        }
+                    });
+                }
 
                 sortByKey(sortedPoints, "d");
 
