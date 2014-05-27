@@ -270,6 +270,10 @@ function copyTouch(touch) {
     return { identifier: touch.identifier, pageX: touch.pageX, pageY: touch.pageY };
 }
 
+function copyLeapTouch(touch){
+    return {identifier: touch.id, pageX: touch.x, pageY: touch.y };
+}
+
 function ongoingTouchIndexById(idToFind) {
     for (var i=0; i < ongoingTouches.length; i++) {
         var id = ongoingTouches[i].identifier;
@@ -354,17 +358,23 @@ function onMove( event ) {
                 vertex.z = mouse.z;
 
                 vertex = mesh.geometry.vertices[0];
-                vertex.x = sortedPoints[0].x;
-                vertex.y = sortedPoints[0].y;
+                var targetPoint = sortedPoints[0] || new THREE.Vector2(0,0);
+                vertex.x = targetPoint.x;
+                vertex.y = targetPoint.y;
 
                 // Make sure picked points have some space between them
                 var secondPointIndex = 1;
                 var tooSmall = true;
                 while (tooSmall) {
                     var secondPoint = sortedPoints[ secondPointIndex ];
-                    var innerDistance = new THREE.Vector2(secondPoint.x, secondPoint.y).distanceTo(sortedPoints[0]);
-                    tooSmall = ( innerDistance < 2 );
-                    secondPointIndex++;
+                    if(secondPoint){
+                        var innerDistance = new THREE.Vector2(secondPoint.x, secondPoint.y).distanceTo(sortedPoints[0]);
+                        tooSmall = ( innerDistance < 2 );
+                        secondPointIndex++;
+                    } else {
+                        secondPointIndex = 0;
+                        tooSmall = false;
+                    }
                 }
 
                 var targetVertex = mesh.geometry.vertices[1];
