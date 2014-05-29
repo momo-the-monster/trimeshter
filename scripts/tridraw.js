@@ -1,6 +1,7 @@
 var camera, scene, renderer, projector;
 var wall;
 var allPoints = [];
+var allMeshes = new Array();
 var mouse;
 
 var selectionMeshes = [];
@@ -15,8 +16,9 @@ var imagePath = '../images/';
 var ongoingTouches = new Array();
 
 var config = {
-    mirror:false,
-    connectToSelection:true
+    mirror:true,
+    connectToSelection:false,
+    tween:true
 };
 
 var init = function () {
@@ -29,6 +31,9 @@ var init = function () {
     camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
     projector = new THREE.Projector();
     camera.position.z = 100;
+
+    // THREEx plugins
+    THREEx.WindowResize(renderer, camera);
 
     scene = new THREE.Scene();
 
@@ -63,7 +68,7 @@ function buildMasterObject(){
         new THREE.Vector2 (0, 0)
     ]);
 
-//	geoTri = new THREE.ExtrudeGeometry(triangle, { amount: 10 });
+//	var geometry = new THREE.ExtrudeGeometry(triangle, { amount:2 });
     var geometry = triangle.makeGeometry();
     geometry.computeFaceNormals();
     geometry.computeVertexNormals();
@@ -195,6 +200,22 @@ function removeSelectionMeshes(touchid){
  * Call requestAnimationFrame(self)
  */
 var animate = function () {
+
+//    for( var i = 0; i < allMeshes.length; i++){
+//        var mesh = allMeshes[i];
+//        for( var v = 0; v < mesh.geometry.vertices.length; v++){
+//            var vertex = mesh.geometry.vertices[v];
+//            vertex.z -= (Math.abs(vertex.z + 0.00000001) * 1.00000001);
+//            /*
+//            if(vertex.x > 0) {
+//                vertex.x -= 0.001;
+//            } else {
+//                vertex.x += 0.001;
+//            }
+//            */
+//        }
+//        mesh.geometry.verticesNeedUpdate = true;
+//    }
 
     for (var i = selectionMeshes.length - 1; i >= 0; i--) {
         selectionMeshes[i].geometry.verticesNeedUpdate = true;
@@ -378,8 +399,9 @@ function onMove( event ) {
                 }
 
                 var targetVertex = mesh.geometry.vertices[1];
-                targetVertex.x = sortedPoints[ secondPointIndex ].x;
-                targetVertex.y = sortedPoints[ secondPointIndex ].y;
+                targetPoint = sortedPoints[ secondPointIndex ] || new THREE.Vector2(0,0);
+                targetVertex.x = targetPoint.x;
+                targetVertex.y = targetPoint.y;
 
             }
         }
@@ -405,8 +427,31 @@ function onFinish( event ) {
             if(mesh.touchid == event.id){
                 // add new Mesh to scene
                 var meshClone = new THREE.Mesh( mesh.geometry.clone(), material );
-                meshClone.overdraw = true;
+             //   meshClone.overdraw = true;
+                meshClone.geometry.dynamic = true;
+                allMeshes.push( meshClone);
                 scene.add( meshClone );
+
+                if(config.tween) {
+                    TweenMax.to(meshClone, 5, {
+                        onUpdate: onTweenUpdate,
+                        onComplete: onTweenComplete,
+                        ease: Cubic.easeInOut,
+                        delay: 1,
+                        repeat: 0,
+                        yoyo: false
+                    });
+                }
+
+                function onTweenUpdate(){
+                    var mesh = this.target;
+                    var d = this.progress();
+                    mesh.position.setZ( d * -800 );
+                }
+
+                function onTweenComplete(){
+                    scene.remove(this.target);
+                }
 
                 allPoints.push( meshClone.geometry.vertices[0]);
                 allPoints.push( meshClone.geometry.vertices[1]);
@@ -429,7 +474,7 @@ function getRandomMaterial() {
 }
 
 function getWorldPosition( x, y ) {
-    var vector = new THREE.Vector3(  x, y, 0.5 );
+    var vector = new THREE.Vector3(  x, y, 0 );
     projector.unprojectVector( vector, camera );
 
     var raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );

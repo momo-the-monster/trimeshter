@@ -1,0 +1,94 @@
+<html>
+<!-- This Demo overlays a rigged hand on top of the existing page.  Requires a WebGL-capable browser. -->
+<head>
+    <link rel="stylesheet" href="../styles/main.css" />
+</head>
+<body>
+
+<script src="//code.jquery.com/jquery-2.1.1.min.js"></script>
+<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r67/three.min.js"></script>
+<script type="text/javascript" src="../scripts/vendor/three/THREEx.WindowResize.js"></script>
+<script type="text/javascript" src="../scripts/vendor/dat.gui.min.js"></script>
+<script src="//js.leapmotion.com/leap-0.6.0.js"></script>
+<!-- This gives us the hand-hold and hand-entry plugins, which rigged-hand depends on -->
+<script src="//js.leapmotion.com/leap-plugins-0.1.6.js"></script>
+<script type="text/javascript" src="../scripts/vendor/leap/leap.rigged-hand-0.1.4.js"></script>
+<script type="text/javascript" src="../scripts/tridraw.js"></script>
+<script type="text/javascript" src="../scripts/vendor/tween/TweenMax.min.js"></script>
+<script>
+
+    var leapTouches = new Array();
+    config.zTrigger = 0.978;
+
+    (window.controller = new Leap.Controller)
+            .use('riggedHand',{
+                parent: scene,
+                renderer: renderer,
+                renderFn: function() {
+              //      renderer.render( scene, camera );
+                },
+                scale: 2,
+                offset: new THREE.Vector3(0,-30,10),
+                camera: camera,
+                positionScale: 2
+            })
+            .connect();
+
+    controller.on('riggedHand.meshAdded', function(handMesh, leapHand){
+        handMesh.material.opacity = 0.9;
+    });
+
+    var triggerRange = 0.0015;
+    var triggerMin = config.zTrigger - triggerRange;
+    var triggerMax = config.zTrigger + triggerRange;
+
+    controller.on('frame', function(frame) {
+        var hand, handMesh, screenPosition;
+        for (var h = 0; h < frame.hands.length; h++) {
+            hand = frame.hands[h]
+            handMesh = frame.hands[h].data('riggedHand.mesh');
+
+            for(var i = 0; i < hand.fingers.length; i++){
+                var id = hand.fingers[i].id;
+                screenPosition = handMesh.screenPosition(hand.fingers[i].tipPosition, camera);
+
+                if(screenPosition.z > triggerMin && screenPosition.z < triggerMax){
+
+                    // test for new touch
+                    var event = {x: screenPosition.x, y:window.innerHeight - screenPosition.y, id:id};
+
+                    var idx = isLeapPressed(id);
+                    if(idx >= 0){
+                        onMove(event);
+                    } else {
+                        onStart(event);
+                        leapTouches.push(event);
+                    }
+
+                } else {
+                    var idx = isLeapPressed(id);
+                    if(idx >= 0 ){
+                        var event = {x: screenPosition.x, y:window.innerHeight - screenPosition.y, id:id};
+                        onFinish(event);
+                        leapTouches.splice( idx, 1);
+                    }
+                }
+            }
+
+        }
+    });
+
+    function isLeapPressed(idToFind){
+        for (var i=0; i < leapTouches.length; i++) {
+            var id = leapTouches[i].id;
+
+            if (id == idToFind) {
+                return i;
+            }
+        }
+        return -1;    // not found
+    }
+
+</script>
+</body>
+</html>
