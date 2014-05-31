@@ -1,8 +1,8 @@
 var camera, scene, renderer, projector;
 var wall;
-var allPoints = [];
 var allMeshes = new Array();
 var mouse;
+var sortedPoints = [];
 
 var selectionMeshes = [];
 
@@ -16,12 +16,43 @@ var imagePath = '../images/';
 var ongoingTouches = new Array();
 
 var config = {
-    mirror:true,
+    mirror:false,
     connectToSelection:false,
-    tween:true
+    randomZ: 10,
+    tween:{
+        active: true,
+        growDuration: 0.5,
+        lifetime: 10
+    },
+    drift:{
+        x: 0.0,
+        y: 0.0,
+        z: 0.0
+    }
+
 };
 
 var init = function () {
+
+    var gui = new dat.GUI({});
+
+    var guiBuild = gui.addFolder("Building");
+    guiBuild.add(config, 'mirror');
+    guiBuild.add(config, 'connectToSelection');
+    guiBuild.add(config, 'randomZ', 0, 100);
+    guiBuild.open();
+
+    var guiTween = gui.addFolder("Tween");
+    guiTween.add(config.tween, 'active');
+    guiTween.add(config.tween, 'growDuration', 0, 3);
+    guiTween.add(config.tween, 'lifetime', 3, 100);
+    guiTween.open();
+
+    var guiDrift = gui.addFolder("Drift");
+    guiDrift.add(config.drift, 'x', -1, 1);
+    guiDrift.add(config.drift, 'y', -1, 1);
+    guiDrift.add(config.drift, 'z', -3, 0.1);
+    guiDrift.open();
 
     renderer = new THREE.WebGLRenderer( {antialias:true} );
 
@@ -38,13 +69,15 @@ var init = function () {
     scene = new THREE.Scene();
 
     // Spring Palette from http://www.colourlovers.com/palette/3365617/spring
-    var palette = [
-        [45,59,96],
-        [248,99,99],
-        [255,255,255],
-        [176,243,176],
-        [169,249,245]
-    ];
+    var springPalette = [[45,59,96],[248,99,99],[255,255,255],[176,243,176],[169,249,245]];
+
+    // BlacknBlue from http://www.colourlovers.com/palette/3370153/blacknblue
+    var blacknblue = [[68,68,68],[8,226,255],[14,96,107],[230,230,230],[163,172,173]];
+
+    // Custom mix
+    var pl1 = [[68,68,68],[8,226,255],[14,96,107],[230,230,230],[163,172,173], [250,2,60], [255,0,170],[92,240,212]];
+
+    var palette = pl1;
 
     materials = buildMaterials( palette );
 //    materials = buildMaterialsFromFiles();
@@ -115,6 +148,7 @@ function buildMaterials( palette ){
             new THREE.MeshBasicMaterial({
                 transparent:true,
                 map:texture,
+                wireframe:true,
                 side: THREE.DoubleSide
             })
         );
@@ -131,23 +165,24 @@ function buildMaterialsFromFiles(){
     var result = [];
 
     var images = [
-        "https://s3-us-west-2.amazonaws.com/s.cdpn.io/108947/18.png",
-        "https://s3-us-west-2.amazonaws.com/s.cdpn.io/108947/1.png",
-        "https://s3-us-west-2.amazonaws.com/s.cdpn.io/108947/6.png",
-        "https://s3-us-west-2.amazonaws.com/s.cdpn.io/108947/12.png",
-        "https://s3-us-west-2.amazonaws.com/s.cdpn.io/108947/16.png",
-        "https://s3-us-west-2.amazonaws.com/s.cdpn.io/108947/17.png",
-        "https://s3-us-west-2.amazonaws.com/s.cdpn.io/108947/15.png",
-        "https://s3-us-west-2.amazonaws.com/s.cdpn.io/108947/21.png",
-        "https://s3-us-west-2.amazonaws.com/s.cdpn.io/108947/20.png"
+        "../images/18.png",
+        "../images/1.png",
+        "../images/6.png",
+        "../images/12.png",
+        "../images/16.png",
+        "../images/17.png",
+        "../images/15.png",
+        "../images/21.png",
+        "../images/20.png"
     ];
-    images = [imagePath + "green_gradient.png"];
 
     for (var i = 0; i < images.length; i++) {
         var path = images[i];
         var texture = THREE.ImageUtils.loadTexture( path );
 
-        result.push ( new THREE.MeshLambertMaterial( { transparent:true, map: texture, wireframe:true, side: THREE.DoubleSide} ));
+        result.push ( new THREE.MeshBasicMaterial(
+            { transparent:true, map: texture, wireframe:false, side: THREE.DoubleSide}
+        ));
 
     }
 
@@ -167,10 +202,6 @@ function registerListeners(){
     el.addEventListener("touchmove", handleMove, false);
 
     mouse = {x:0,y:0};
-
- //   document.addEventListener( 'mousemove', onMouseMove, false );
- //   document.addEventListener( 'mousedown', onMouseDown, false );
-
 }
 
 function addSelectionMeshes(touchid){
@@ -201,21 +232,18 @@ function removeSelectionMeshes(touchid){
  */
 var animate = function () {
 
-//    for( var i = 0; i < allMeshes.length; i++){
-//        var mesh = allMeshes[i];
-//        for( var v = 0; v < mesh.geometry.vertices.length; v++){
-//            var vertex = mesh.geometry.vertices[v];
-//            vertex.z -= (Math.abs(vertex.z + 0.00000001) * 1.00000001);
-//            /*
-//            if(vertex.x > 0) {
-//                vertex.x -= 0.001;
-//            } else {
-//                vertex.x += 0.001;
-//            }
-//            */
-//        }
-//        mesh.geometry.verticesNeedUpdate = true;
-//    }
+    if(config.drift.x != 0 || config.drift.y != 0 || config.drift.z != 0) {
+        for (var i = 0; i < allMeshes.length; i++) {
+            var mesh = allMeshes[i];
+            for (var v = 0; v < mesh.geometry.vertices.length; v++) {
+                var vertex = mesh.geometry.vertices[v];
+                vertex.x += config.drift.x;
+                vertex.y += config.drift.y;
+                vertex.z += config.drift.z;
+            }
+            mesh.geometry.verticesNeedUpdate = true;
+        }
+    }
 
     for (var i = selectionMeshes.length - 1; i >= 0; i--) {
         selectionMeshes[i].geometry.verticesNeedUpdate = true;
@@ -324,7 +352,6 @@ function onMove( event ) {
 
     mouse.x = ( event.x / renderer.domElement.width ) * 2 - 1;
     mouse.y = - ( event.y / renderer.domElement.height ) * 2 + 1;
-//	mouse.z = getRandomArbitrary(-10, 10);
     mouse.z = 0;
 
     var position = getWorldPosition( mouse.x, mouse.y );
@@ -355,7 +382,20 @@ function onMove( event ) {
                     vertex.x = position.x;
                 }
 
-                var sortedPoints = [];
+                sortedPoints = new Array();
+                var allPoints = [];
+
+                // construct allpoints from allmeshes
+                allMeshes.forEach(function (mesh){
+                    mesh.geometry.vertices.forEach(function (vertex){
+                        allPoints.push( vertex );
+                    });
+                });
+
+                // clear dupes
+                allPoints = allPoints.filter( function( item, index, inputArray ) {
+                    return inputArray.indexOf(item) == index;
+                });
 
                 allPoints.forEach(function (point) {
                     sortedPoints.push({ x: point.x, y: point.y, d: point.distanceTo(vertex)});
@@ -425,42 +465,53 @@ function onFinish( event ) {
             var mesh = selectionMeshes[i];
 
             if(mesh.touchid == event.id){
+                mesh.geometry.vertices[2].z = getRandomArbitrary(config.randomZ, -config.randomZ);
                 // add new Mesh to scene
                 var meshClone = new THREE.Mesh( mesh.geometry.clone(), material );
-             //   meshClone.overdraw = true;
                 meshClone.geometry.dynamic = true;
                 allMeshes.push( meshClone);
                 scene.add( meshClone );
 
-                if(config.tween) {
-                    TweenMax.to(meshClone, 5, {
-                        onUpdate: onTweenUpdate,
-                        onComplete: onTweenComplete,
-                        ease: Cubic.easeInOut,
-                        delay: 1,
-                        repeat: 0,
-                        yoyo: false
+                if(config.tween.active) {
+
+                    // initial growth tween
+                    var vertex = meshClone.geometry.vertices[2];
+                    var targetPoint = vertex.clone();
+                    var ungrownPoint = meshClone.geometry.vertices[0];
+                    vertex.set(ungrownPoint.x, ungrownPoint.y, ungrownPoint.z);
+                    TweenMax.to(vertex, config.tween.growDuration, {
+                        ease: Cubic.easeOut,
+                        x: targetPoint.x,
+                        y: targetPoint.y,
+                        z: targetPoint.z
                     });
+
+                    // Lifetime tween
+                    TweenMax.to(meshClone, config.tween.lifetime, {
+                        onComplete: killMesh,
+                        onUpdate: function(){
+                            this.target.geometry.verticesNeedUpdate = true;
+                        }
+                    });
+
+                    // Transition out at end of lifetime
+                    TweenMax.to(vertex, config.tween.growDuration, {
+                        delay: config.tween.lifetime - config.tween.growDuration,
+                        ease: Expo.easeIn,
+                        onStart:function(){
+                            this.updateTo({
+                                x: meshClone.geometry.vertices[0].x,
+                                y: meshClone.geometry.vertices[0].y,
+                                z: meshClone.geometry.vertices[0].z,
+                            });
+                        }
+                    })
                 }
 
-                function onTweenUpdate(){
-                    var mesh = this.target;
-                    var d = this.progress();
-                    mesh.position.setZ( d * -800 );
-                }
-
-                function onTweenComplete(){
+                function killMesh(){
+                    allMeshes.splice( allMeshes.indexOf(this.target),1);
                     scene.remove(this.target);
                 }
-
-                allPoints.push( meshClone.geometry.vertices[0]);
-                allPoints.push( meshClone.geometry.vertices[1]);
-                allPoints.push( meshClone.geometry.vertices[2]);
-
-                // remove duplicate points from allPoints
-                allPoints = allPoints.filter( function( item, index, inputArray ) {
-                    return inputArray.indexOf(item) == index;
-                });
 
             }
         }
