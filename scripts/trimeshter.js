@@ -1,15 +1,12 @@
-var camera, scene, renderer, projector;
-var wall;
-var allMeshes = new Array();
-var sortedPoints = [];
-var selectionMeshes = [];
-
-var geoTri;
-var materialSelection;
-
-var materials;
-var materialsSolid;
-var materialsWire;
+var camera, scene, renderer, projector;     // Boilerplate Three.js items
+var wall;                                   // Touch points intersect wall to find scene positions
+var allMeshes = new Array();                // Generated mesh items stored here
+var selectionMeshes = new Array();          // In-progress selection meshes
+var geoTri;                                 // Master object used to create new meshes
+var materialSelection;                      // Material applied to selection meshes
+var materials;                              // Currently selected material array
+var materialsSolid;                         // Solid material array, used by default
+var materialsWire;                          // Wireframe material array, selectable in GUI
 
 var config = {
     mirror:false,
@@ -27,8 +24,11 @@ var config = {
         z: 0.0
     }
 
-};
+};          // Config options, all adjustable via dat.GUI
 
+/**
+ * Calls all init modules
+ */
 var init = function () {
     initGui();
     initThree();
@@ -200,6 +200,10 @@ function buildMaterials( palette, wireframe ){
     return result;
 }
 
+/**
+ * Add selection mesh to scene and selectionMeshes array
+ * @param touchid
+ */
 function addSelectionMeshes(touchid){
     var numSelectionsToMake = config.mirror ? 2 : 1;
     // Create and Add all selection meshes
@@ -212,6 +216,11 @@ function addSelectionMeshes(touchid){
     }
 }
 
+/**
+ * Removes selection mesh created by target touch id
+ * Splices from selectionMeshes array and removes from scene
+ * @param touchid
+ */
 function removeSelectionMeshes(touchid){
     for( var i = selectionMeshes.length - 1; i >= 0; i--){
         if(selectionMeshes[i].touchid == touchid){
@@ -249,10 +258,21 @@ var animate = function () {
     renderer.render( scene, camera );
 };
 
+/**
+ * Main hook for Inputs
+ * Adds new selection mesh
+ * @param event has x, y, id
+ */
 function onStart( event ){
     addSelectionMeshes(event.id);
 }
 
+/**
+ * Main hook for Inputs
+ * Updates geometry of selection mesh based on nearest points
+ * TODO: make search its own function?
+ * @param event has x, y, id
+ */
 function onMove( event ) {
 
     var x = ( event.x / renderer.domElement.width ) * 2 - 1;
@@ -261,7 +281,6 @@ function onMove( event ) {
 
     var position = getWorldPosition( x, y );
     if( position ) {
-
         for (var i = selectionMeshes.length - 1; i >= 0; i--) {
 
             var mesh = selectionMeshes[i];
@@ -287,10 +306,10 @@ function onMove( event ) {
                     vertex.x = position.x;
                 }
 
-                sortedPoints = new Array();
-                var allPoints = [];
+                var sortedPoints = new Array();
+                var allPoints = new Array();
 
-                // construct allpoints from allmeshes
+                // construct allPoints from allMeshes
                 allMeshes.forEach(function (mesh){
                     mesh.geometry.vertices.forEach(function (vertex){
                         allPoints.push( vertex );
@@ -350,11 +369,16 @@ function onMove( event ) {
 
             }
         }
-
     }
 
 }
 
+/**
+ * Main hook for Inputs
+ * Creates new mesh from selection mesh, then deletes selection
+ * New mesh is assigned a lifetime and grown in with a Tween
+ * @param event
+ */
 function onFinish( event ) {
 
     var x = ( event.x / renderer.domElement.width ) * 2 - 1;
@@ -406,7 +430,7 @@ function onFinish( event ) {
                             this.updateTo({
                                 x: meshClone.geometry.vertices[0].x,
                                 y: meshClone.geometry.vertices[0].y,
-                                z: meshClone.geometry.vertices[0].z,
+                                z: meshClone.geometry.vertices[0].z
                             });
                         }
                     })
@@ -424,10 +448,20 @@ function onFinish( event ) {
     }
 }
 
+/**
+ * Gets a random selection from the selected materials array
+ * @returns THREE.Material
+ */
 function getRandomMaterial() {
     return materials[ Math.floor( Math.random() * materials.length  )];
 }
 
+/**
+ * Finds the world position from x&y screen positions
+ * @param x
+ * @param y
+ * @returns {*}
+ */
 function getWorldPosition( x, y ) {
     var vector = new THREE.Vector3(  x, y, 0 );
     projector.unprojectVector( vector, camera );
@@ -442,6 +476,13 @@ function getWorldPosition( x, y ) {
     }
 }
 
+/**
+ * Sorts an array by one of its keys
+ * TODO: make this a prototype method?
+ * @param array
+ * @param key
+ * @returns {Array|*}
+ */
 function sortByKey(array, key) {
     return array.sort(function(a, b) {
         var x = a[key]; var y = b[key];
@@ -449,10 +490,18 @@ function sortByKey(array, key) {
     });
 }
 
-// Returns a random number between min and max
+/**
+ * Returns a random number between min and max
+ * @param min
+ * @param max
+ * @returns {*}
+ */
 function getRandomArbitrary(min, max) {
     return Math.random() * (max - min) + min;
 }
 
+/**
+ * Kick it all off!
+ */
 init();
 animate();
