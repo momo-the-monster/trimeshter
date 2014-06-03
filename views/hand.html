@@ -5,16 +5,18 @@
 </head>
 <body>
 
-<script src="//code.jquery.com/jquery-2.1.1.min.js"></script>
-<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r67/three.min.js"></script>
-<script type="text/javascript" src="../scripts/vendor/three/THREEx.WindowResize.js"></script>
-<script type="text/javascript" src="../scripts/vendor/dat.gui.min.js"></script>
-<script src="//js.leapmotion.com/leap-0.6.0.js"></script>
-<!-- This gives us the hand-hold and hand-entry plugins, which rigged-hand depends on -->
-<script src="//js.leapmotion.com/leap-plugins-0.1.6.js"></script>
-<script type="text/javascript" src="../scripts/vendor/leap/leap.rigged-hand-0.1.4.js"></script>
-<script type="text/javascript" src="../scripts/tridraw.js"></script>
-<script type="text/javascript" src="../scripts/vendor/tween/TweenMax.min.js"></script>
+    <!-- Library Includes -->
+    <script type="text/javascript" src="../scripts/vendor/jquery-1.8.1.min.js"></script>
+    <script type="text/javascript" src="../scripts/vendor/three/three.min.js"></script>
+    <script type="text/javascript" src="../scripts/vendor/three/THREEx.WindowResize.js"></script>
+    <script type="text/javascript" src="../scripts/vendor/dat.gui.min.js"></script>
+    <script type="text/javascript" src="../scripts/vendor/leap/leap-0.6.0.min.js"></script>
+    <script type="text/javascript" src="../scripts/vendor/leap/leap-plugins-0.1.6.min.js"></script>
+    <script type="text/javascript" src="../scripts/vendor/leap/leap.rigged-hand-0.1.4.js"></script>
+    <script type="text/javascript" src="../scripts/vendor/tween/TweenMax.min.js"></script>
+
+    <!-- Source Includes -->
+    <script type="text/javascript" src="../scripts/tridraw.js"></script>
 <script>
 
     var leapTouches = new Array();
