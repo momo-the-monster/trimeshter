@@ -12,8 +12,6 @@ var materials;
 var materialsSolid;
 var materialsWire;
 
-var ongoingTouches = new Array();
-
 var config = {
     mirror:false,
     connectToSelection:false,
@@ -208,14 +206,6 @@ function buildMaterials( palette, wireframe ){
  * Listen for mouse and touch events
  */
 function registerListeners(){
-
-    var el = document.getElementsByTagName("canvas")[0];
-    el.addEventListener("touchstart", handleStart, false);
-    el.addEventListener("touchend", handleEnd, false);
-    el.addEventListener("touchcancel", handleCancel, false);
-    el.addEventListener("touchleave", handleEnd, false);
-    el.addEventListener("touchmove", handleMove, false);
-
     mouse = {x:0,y:0};
 }
 
@@ -267,83 +257,6 @@ var animate = function () {
     requestAnimationFrame( animate );
     renderer.render( scene, camera );
 };
-
-// Touch handling adapted from https://developer.mozilla.org/en-US/docs/Web/Guide/Events/Touch_events
-function handleStart(evt) {
-    evt.preventDefault();
-
-    var el = document.getElementsByTagName("canvas")[0];
-    var ctx = el.getContext("2d");
-    var touches = evt.changedTouches;
-
-    for (var i=0; i < touches.length; i++) {
-        ongoingTouches.push(copyTouch(touches[i]));
-        var event = {x: touches[i].pageX, y:touches[i].pageY, id:touches[i].identifier};
-        onStart(event);
-        onMove(event);
-        onMove(event);
-    }
-}
-
-function handleMove(evt) {
-    evt.preventDefault();
-    var el = document.getElementsByTagName("canvas")[0];
-    var ctx = el.getContext("2d");
-    var touches = evt.changedTouches;
-    for (var i=0; i < touches.length; i++) {
-        var idx = ongoingTouchIndexById(touches[i].identifier);
-
-        if(idx >= 0) {
-            onMove({x: touches[i].pageX, y: touches[i].pageY, id:touches[i].identifier});
-            ongoingTouches.splice(idx, 1, copyTouch(touches[i]));  // swap in the new touch record
-        } else {
-            console.log("can't figure out which touch to continue");
-        }
-    }
-}
-
-function handleEnd(evt) {
-    evt.preventDefault();
-    var el = document.getElementsByTagName("canvas")[0];
-    var ctx = el.getContext("2d");
-    var touches = evt.changedTouches;
-
-    for (var i=0; i < touches.length; i++) {
-        var idx = ongoingTouchIndexById(touches[i].identifier);
-
-        if(idx >= 0) {
-            onFinish({x: touches[i].pageX, y: touches[i].pageY, id:touches[i].identifier});
-            ongoingTouches.splice(idx, 1);  // remove it; we're done
-        } else {
-            console.log("can't figure out which touch to end");
-        }
-    }
-}
-
-function handleCancel(evt) {
-    evt.preventDefault();
-    console.log("touchcancel.");
-    var touches = evt.changedTouches;
-
-    for (var i=0; i < touches.length; i++) {
-        ongoingTouches.splice(i, 1);  // remove it; we're done
-    }
-}
-
-function copyTouch(touch) {
-    return { identifier: touch.identifier, pageX: touch.pageX, pageY: touch.pageY };
-}
-
-function ongoingTouchIndexById(idToFind) {
-    for (var i=0; i < ongoingTouches.length; i++) {
-        var id = ongoingTouches[i].identifier;
-
-        if (id == idToFind) {
-            return i;
-        }
-    }
-    return -1;    // not found
-}
 
 function onMouseMove( event ) {
  //   event.preventDefault();
