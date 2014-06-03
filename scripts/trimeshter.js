@@ -3,16 +3,14 @@ var wall;
 var allMeshes = new Array();
 var mouse;
 var sortedPoints = [];
-
 var selectionMeshes = [];
 
 var geoTri;
-var matDefault;
-var matSelection;
+var materialSelection;
 
 var materials;
-var palette;
-var imagePath = '../images/';
+var materialsSolid;
+var materialsWire;
 
 var ongoingTouches = new Array();
 
@@ -35,7 +33,16 @@ var config = {
 };
 
 var init = function () {
+    initGui();
+    initThree();
+    initMaterials();
+    registerListeners();
+};
 
+/**
+ * Set up Dat.GUI controls
+ */
+function initGui(){
     var gui = new dat.GUI({});
 
     var guiBuild = gui.addFolder("Building");
@@ -43,8 +50,8 @@ var init = function () {
     guiBuild.add(config, 'connectToSelection');
     guiBuild.add(config, 'randomZ', 0, 100);
     var wframe = guiBuild.add(config, 'wireframe');
-    wframe.onChange(function(value){
-        materials = buildMaterials(palette, value);
+    wframe.onChange(function (value) {
+        materials = value ? materialsWire : materialsSolid
     });
     guiBuild.open();
 
@@ -59,13 +66,18 @@ var init = function () {
     guiDrift.add(config.drift, 'y', -1, 1);
     guiDrift.add(config.drift, 'z', -3, 0.1);
     guiDrift.open();
+}
 
-    renderer = new THREE.WebGLRenderer( {antialias:true} );
+/**
+ * Set up THREE.js scene
+ */
+function initThree(){
+    renderer = new THREE.WebGLRenderer({antialias: true});
 
-    renderer.setSize( window.innerWidth, window.innerHeight );
-    document.body.appendChild( renderer.domElement );
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
 
-    camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
+    camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
     projector = new THREE.Projector();
     camera.position.z = 100;
 
@@ -74,33 +86,61 @@ var init = function () {
 
     scene = new THREE.Scene();
 
-    // Spring Palette from http://www.colourlovers.com/palette/3365617/spring
-    var springPalette = [[45,59,96],[248,99,99],[255,255,255],[176,243,176],[169,249,245]];
-
-    // BlacknBlue from http://www.colourlovers.com/palette/3370153/blacknblue
-    var blacknblue = [[68,68,68],[8,226,255],[14,96,107],[230,230,230],[163,172,173]];
-
-    // Custom mix
-    var pl1 = [[68,68,68],[8,226,255],[14,96,107],[230,230,230],[163,172,173], [250,2,60], [255,0,170],[92,240,212]];
-
-    palette = pl1;
-
-    materials = buildMaterials( palette, false );
-//    materials = buildMaterialsFromFiles();
-
-    registerListeners();
-
     // Make wall for mouse intersection
-    wall = new THREE.Mesh(new THREE.PlaneGeometry(2000,2000), new THREE.MeshBasicMaterial({color:0x89898900, wireframe:true}));
+    wall = new THREE.Mesh(new THREE.PlaneGeometry(2000, 2000), new THREE.MeshBasicMaterial({color: 0x89898900}));
 
     // Set Default objects
     geoTri = buildMasterObject();
-    matSelection = new THREE.MeshBasicMaterial( { color: 0xffffff, wireframe:true, side: THREE.DoubleSide } );
+    materialSelection = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, side: THREE.DoubleSide });
+}
 
-};
+/**
+ * Create materials array to use
+ * There are several palettes to choose from
+ * And we generate a solid and wireframe array of our chosen palette
+ */
+function initMaterials(){
+    // Spring Palette from http://www.colourlovers.com/palette/3365617/spring
+    var springPalette = [
+        [45, 59, 96],
+        [248, 99, 99],
+        [255, 255, 255],
+        [176, 243, 176],
+        [169, 249, 245]
+    ];
 
+    // BlacknBlue from http://www.colourlovers.com/palette/3370153/blacknblue
+    var blacknblue = [
+        [68, 68, 68],
+        [8, 226, 255],
+        [14, 96, 107],
+        [230, 230, 230],
+        [163, 172, 173]
+    ];
+
+    // Custom mix
+    var pl1 = [
+        [68, 68, 68],
+        [8, 226, 255],
+        [14, 96, 107],
+        [230, 230, 230],
+        [163, 172, 173],
+        [250, 2, 60],
+        [255, 0, 170],
+        [92, 240, 212]
+    ];
+
+    materialsSolid = buildMaterials(pl1, false);
+    materialsWire = buildMaterials(pl1, true);
+
+    materials = materialsSolid;
+}
+
+/**
+ * Create the object that will be cloned to create all new objects
+ * @returns Geometry
+ */
 function buildMasterObject(){
-    // Set Default objects
    var triangle = new THREE.Shape([
         new THREE.Vector2 (-0.5,  -0.75),
         new THREE.Vector2 (0.5, -0.75),
@@ -155,50 +195,10 @@ function buildMaterials( palette, wireframe ){
             new THREE.MeshBasicMaterial({
                 transparent:true,
                 map:texture,
-                wireframe:true,
+                wireframe:wireframe,
                 side: THREE.DoubleSide
             })
         );
-        result.push(
-            new THREE.MeshBasicMaterial({
-                transparent: true,
-                map: texture,
-                wireframe: false,
-                side: THREE.DoubleSide
-            })
-        );
-    }
-
-    return result;
-}
-
-/**
- * Build and return array of Materials
- * @returns {Array}
- */
-function buildMaterialsFromFiles(){
-    var result = [];
-
-    var images = [
-        "../images/18.png",
-        "../images/1.png",
-        "../images/6.png",
-        "../images/12.png",
-        "../images/16.png",
-        "../images/17.png",
-        "../images/15.png",
-        "../images/21.png",
-        "../images/20.png"
-    ];
-
-    for (var i = 0; i < images.length; i++) {
-        var path = images[i];
-        var texture = THREE.ImageUtils.loadTexture( path );
-
-        result.push ( new THREE.MeshBasicMaterial(
-            { transparent:true, map: texture, wireframe:false, side: THREE.DoubleSide}
-        ));
-
     }
 
     return result;
@@ -223,7 +223,7 @@ function addSelectionMeshes(touchid){
     var numSelectionsToMake = config.mirror ? 2 : 1;
     // Create and Add all selection meshes
     for ( var i = 0; i < numSelectionsToMake; i++ ) {
-        var mesh = new THREE.Mesh( geoTri.clone(), matSelection.clone() );
+        var mesh = new THREE.Mesh( geoTri.clone(), materialSelection.clone() );
         mesh.geometry.dynamic = true;
         mesh.touchid = touchid;
         selectionMeshes.push( mesh );
@@ -332,10 +332,6 @@ function handleCancel(evt) {
 
 function copyTouch(touch) {
     return { identifier: touch.identifier, pageX: touch.pageX, pageY: touch.pageY };
-}
-
-function copyLeapTouch(touch){
-    return {identifier: touch.id, pageX: touch.x, pageY: touch.y };
 }
 
 function ongoingTouchIndexById(idToFind) {
