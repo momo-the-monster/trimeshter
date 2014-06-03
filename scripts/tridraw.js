@@ -11,6 +11,7 @@ var matDefault;
 var matSelection;
 
 var materials;
+var palette;
 var imagePath = '../images/';
 
 var ongoingTouches = new Array();
@@ -19,6 +20,7 @@ var config = {
     mirror:false,
     connectToSelection:false,
     randomZ: 10,
+    wireframe: false,
     tween:{
         active: true,
         growDuration: 0.5,
@@ -40,6 +42,10 @@ var init = function () {
     guiBuild.add(config, 'mirror');
     guiBuild.add(config, 'connectToSelection');
     guiBuild.add(config, 'randomZ', 0, 100);
+    var wframe = guiBuild.add(config, 'wireframe');
+    wframe.onChange(function(value){
+        materials = buildMaterials(palette, value);
+    });
     guiBuild.open();
 
     var guiTween = gui.addFolder("Tween");
@@ -77,9 +83,9 @@ var init = function () {
     // Custom mix
     var pl1 = [[68,68,68],[8,226,255],[14,96,107],[230,230,230],[163,172,173], [250,2,60], [255,0,170],[92,240,212]];
 
-    var palette = pl1;
+    palette = pl1;
 
-    materials = buildMaterials( palette );
+    materials = buildMaterials( palette, false );
 //    materials = buildMaterialsFromFiles();
 
     registerListeners();
@@ -116,9 +122,10 @@ function buildMasterObject(){
 /**
  * Generate materials from color palette
  * @param palette
+ * @param wireframe
  * @returns {Array}
  */
-function buildMaterials( palette ){
+function buildMaterials( palette, wireframe ){
     var result = [];
     var width = 256;
     var height = 256;
@@ -149,6 +156,14 @@ function buildMaterials( palette ){
                 transparent:true,
                 map:texture,
                 wireframe:true,
+                side: THREE.DoubleSide
+            })
+        );
+        result.push(
+            new THREE.MeshBasicMaterial({
+                transparent: true,
+                map: texture,
+                wireframe: false,
                 side: THREE.DoubleSide
             })
         );
