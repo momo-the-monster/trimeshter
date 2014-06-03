@@ -1,7 +1,6 @@
 var camera, scene, renderer, projector;
 var wall;
 var allMeshes = new Array();
-var mouse;
 var sortedPoints = [];
 var selectionMeshes = [];
 
@@ -14,7 +13,7 @@ var materialsWire;
 
 var config = {
     mirror:false,
-    connectToSelection:false,
+    connectToSelf:false,
     randomZ: 10,
     wireframe: false,
     tween:{
@@ -34,7 +33,6 @@ var init = function () {
     initGui();
     initThree();
     initMaterials();
-    registerListeners();
 };
 
 /**
@@ -45,12 +43,12 @@ function initGui(){
 
     var guiBuild = gui.addFolder("Building");
     guiBuild.add(config, 'mirror');
-    guiBuild.add(config, 'connectToSelection');
-    guiBuild.add(config, 'randomZ', 0, 100);
+    guiBuild.add(config, 'connectToSelf');
     var wframe = guiBuild.add(config, 'wireframe');
     wframe.onChange(function (value) {
         materials = value ? materialsWire : materialsSolid
     });
+    guiBuild.add(config, 'randomZ', 0, 100);
     guiBuild.open();
 
     var guiTween = gui.addFolder("Tween");
@@ -84,7 +82,7 @@ function initThree(){
 
     scene = new THREE.Scene();
 
-    // Make wall for mouse intersection
+    // Make wall for pointer intersection
     wall = new THREE.Mesh(new THREE.PlaneGeometry(2000, 2000), new THREE.MeshBasicMaterial({color: 0x89898900}));
 
     // Set Default objects
@@ -202,13 +200,6 @@ function buildMaterials( palette, wireframe ){
     return result;
 }
 
-/**
- * Listen for mouse and touch events
- */
-function registerListeners(){
-    mouse = {x:0,y:0};
-}
-
 function addSelectionMeshes(touchid){
     var numSelectionsToMake = config.mirror ? 2 : 1;
     // Create and Add all selection meshes
@@ -258,27 +249,17 @@ var animate = function () {
     renderer.render( scene, camera );
 };
 
-function onMouseMove( event ) {
- //   event.preventDefault();
-    onMove({x:event.clientX, y:event.clientY});
-}
-
-function onMouseDown( event) {
-  //  event.preventDefault();
-    onFinish({x:event.clientX, y:event.clientY});
-}
-
 function onStart( event ){
     addSelectionMeshes(event.id);
 }
 
 function onMove( event ) {
 
-    mouse.x = ( event.x / renderer.domElement.width ) * 2 - 1;
-    mouse.y = - ( event.y / renderer.domElement.height ) * 2 + 1;
-    mouse.z = 0;
+    var x = ( event.x / renderer.domElement.width ) * 2 - 1;
+    var y = - ( event.y / renderer.domElement.height ) * 2 + 1;
+    var z = 0;
 
-    var position = getWorldPosition( mouse.x, mouse.y );
+    var position = getWorldPosition( x, y );
     if( position ) {
 
         for (var i = selectionMeshes.length - 1; i >= 0; i--) {
@@ -326,7 +307,7 @@ function onMove( event ) {
                 });
 
                 // search through selection meshes, too
-                if(config.connectToSelection){
+                if(config.connectToSelf){
                     selectionMeshes.forEach(function (mesh){
                         if(mesh.touchid != event.id){
                             for(var i = 0; i < 3; i++){
@@ -340,7 +321,7 @@ function onMove( event ) {
                 sortByKey(sortedPoints, "d");
 
                 vertex.y = position.y;
-                vertex.z = mouse.z;
+                vertex.z = z;
 
                 vertex = mesh.geometry.vertices[0];
                 var targetPoint = sortedPoints[0] || new THREE.Vector2(0,0);
@@ -376,11 +357,10 @@ function onMove( event ) {
 
 function onFinish( event ) {
 
-    // set mouse data
-    mouse.x = ( event.x / renderer.domElement.width ) * 2 - 1;
-    mouse.y = - ( event.y / renderer.domElement.height ) * 2 + 1;
+    var x = ( event.x / renderer.domElement.width ) * 2 - 1;
+    var y = - ( event.y / renderer.domElement.height ) * 2 + 1;
 
-    var position = getWorldPosition( mouse.x, mouse.y );
+    var position = getWorldPosition( x, y );
     if( position ) {
         // get material to share for all new meshes
         var material = getRandomMaterial();
