@@ -5,7 +5,6 @@ var NetCursor = mmmInput.NetCursor = function NetCursor(options) {
     this.element = options.element || null;
     this.connected = false;
     this.cursors = {};
-    this.touches = [];
     this.start = options.start || null;
     this.move = options.move || null;
     this.end = options.end || null;
@@ -56,8 +55,7 @@ NetCursor.prototype.onDisconnect = function () {
         this.processCursorEnd( cursor );
     }
 
-    // Clean up all the TUIO and touch lists
-    this.touches = [];
+    // Clean up the cursor list
     this.cursors = {};
 
     console.log('Disconnected from Socket.io');
@@ -97,10 +95,8 @@ NetCursor.prototype.onTouchStart = function(event) {
     var touches = event.changedTouches;
 
     for (var i = 0; i < touches.length; i++) {
-        this.touches.push( touches[i] );
         this.socket.emit("cursorStart", this.touchToCursor(touches[i]));
     }
-
 };
 
 NetCursor.prototype.onTouchMove = function(event){
@@ -108,11 +104,8 @@ NetCursor.prototype.onTouchMove = function(event){
     var touches = event.changedTouches;
 
     for (var i = 0; i < touches.length; i++) {
-        var idx = this.touchIndexFromId(touches[i].identifier);
-        this.touches.splice(idx, 1, touches[i]);  // swap in the new touch record
         this.socket.emit("cursorMove", this.touchToCursor(touches[i]));
     }
-
 };
 
 NetCursor.prototype.onTouchEnd = function (event) {
@@ -121,20 +114,7 @@ NetCursor.prototype.onTouchEnd = function (event) {
 
     for (var i = 0; i < touches.length; i++) {
         this.socket.emit("cursorEnd", this.touchToCursor(touches[i]));
-        var idx = this.touchIndexFromId(touches[i].identifier);
-        ongoingTouches.splice(idx, 1);  // remove it; we're done
     }
-};
-
-NetCursor.prototype.touchIndexFromId = function(idToFind) {
-    for (var i = 0; i < this.touches.length; i++) {
-        var id = this.touches[i].identifier;
-
-        if (id == idToFind) {
-            return i;
-        }
-    }
-    return -1;    // not found
 };
 
 NetCursor.prototype.touchToCursor = function(touch){
@@ -170,14 +150,6 @@ NetCursor.prototype.processCursorEnd = function (cursor) {
         this.end(touch);
     }
     delete this.cursors[cursor.id];
-};
-
-NetCursor.prototype.getCursor = function (id) {
-    return this.cursors[id];
-};
-
-NetCursor.prototype.getCursors = function () {
-    return this.cursors;
 };
 
 NetCursor.prototype.cursorToTouch = function(cursor){
