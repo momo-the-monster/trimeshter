@@ -1,0 +1,29 @@
+{
+  "name": "trimeshter-server",
+  "version": "0.0.1",
+  "description": "serves webpages and socket events for Trimeshter drawing",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/momo-the-monster/trimeshter.git"
+  },
+  "keywords": [
+    "drawing",
+    "realtime",
+    "collaboration",
+    "three.js"
+  ],
+  "author": "Momo the Monster",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/momo-the-monster/trimeshter/issues"
+  },
+  "homepage": "https://github.com/momo-the-monster/trimeshter",
+  "dependencies": {
+    "express.io": "^1.1.13"
+  }
+}
