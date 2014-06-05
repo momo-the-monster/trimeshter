@@ -1,13 +1,11 @@
-function wsTouchInit(){
-    window.client = new Caress.Client({
-        host: 'momolug.local',
-        port: 3456
-    });
-    client.connect();
+var socket;
 
-    client.socket.on('touchStart', wsStart);
-    client.socket.on('touchMove', wsMove);
-    client.socket.on('touchEnd', wsEnd);
+function wsTouchInit(){
+    socket = io.connect();
+
+    socket.on('touchStart', wsStart);
+    socket.on('touchMove', wsMove);
+    socket.on('touchEnd', wsEnd);
 }
 
 $(function () {
@@ -27,18 +25,18 @@ function wsTouchToLocal(touch) {
 
 function wsStart(touch) {
     touch = wsTouchToLocal(touch);
-    var event = {x: touch.screenX, y: touch.screenY, id: touch.identifier};
+    var event = {x: touch.clientX, y: touch.clientY, id: touch.id};
     onStart(event);
 }
 
 function wsMove(touch) {
     touch = wsTouchToLocal(touch);
-    var event = {x: touch.screenX, y: touch.screenY, id: touch.identifier};
+    var event = {x: touch.clientX, y: touch.clientY, id: touch.id};
     onMove(event);
 }
 
 function wsEnd(touch) {
     touch = wsTouchToLocal(touch);
-    var event = {x: touch.screenX, y: touch.screenY, id: touch.identifier};
+    var event = {x: touch.clientX, y: touch.clientY, id: touch.id};
     onFinish(event);
 }
