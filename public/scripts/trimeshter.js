@@ -3,16 +3,19 @@ mmm.Trimeshter = mmm.Trimeshter || {};
 
 var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
 
-    this.wall = {};                 // Touch points intersect wall to find scene positions
+    // I declare all the member variables here for clarity
+    // This is probably unnecessary
+    this.wall = {};                 // Touch points intersect the wall to find scene positions
     this.allMeshes = [];            // Generated mesh items stored here
     this.selectionMeshes = [];      // In-progress selection meshes
     this.geoTri = {};               // Master object used to create new meshes
     this.materialSelection = {};    // Material applied to selection meshes
     this.materials = [];            // Currently selected material array
     this.materialsSolid = [];       // Solid material array, used by default
-    this.materialsWire = [];         // Wireframe material array, selectable in GUI
+    this.materialsWire = [];        // Wireframe material array, selectable in GUI
     this.canvas = canvas;
 
+    // Underscore method which binds 'this' to 'trimeshter' in all these functions
     _.bindAll(this, 'onStart', 'onMove', 'onEnd', 'animate', 'killMesh');
 
     this.init();
