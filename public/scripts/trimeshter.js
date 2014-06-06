@@ -454,6 +454,11 @@ Trimeshter.prototype.onEnd = function( event ) {
     }
 };
 
+/**
+ * Add Mesh to allMeshes and scene
+ * Grow it in, tween it out
+ * @param mesh
+ */
 Trimeshter.prototype.growNewObject = function (mesh) {
     mesh.geometry.dynamic = true;
     this.allMeshes.push(mesh);
@@ -498,6 +503,10 @@ Trimeshter.prototype.growNewObject = function (mesh) {
 
 };
 
+/**
+ * Remove mesh from allMeshes and scene
+ * @param tween
+ */
 Trimeshter.prototype.killMesh = function(tween){
     var idx = this.allMeshes.indexOf(tween.target);
     if(idx > -1){
