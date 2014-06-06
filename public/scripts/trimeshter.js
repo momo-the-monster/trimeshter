@@ -13,7 +13,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
     this.materialsWire = [];         // Wireframe material array, selectable in GUI
     this.canvas = canvas;
 
-    _.bindAll(this, 'onStart', 'onMove', 'onEnd', 'animate');
+    _.bindAll(this, 'onStart', 'onMove', 'onEnd', 'animate', 'killMesh');
 
     this.init();
 };
@@ -116,7 +116,7 @@ Trimeshter.prototype.initThree = function(){
 
     // Set Default objects
     this.geoTri = this.buildMasterObject();
-    this.materialSelection = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, side: THREE.DoubleSide });
+    this.materialSelection = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: false, side: THREE.DoubleSide });
 
     // save local variables to Trimeshter object
     this.renderer = renderer;
@@ -242,7 +242,9 @@ Trimeshter.prototype.addSelectionMeshes = function(touchid){
     var numSelectionsToMake = this.config.mirror ? 2 : 1;
     // Create and Add all selection meshes
     for ( var i = 0; i < numSelectionsToMake; i++ ) {
-        var mesh = new THREE.Mesh( this.geoTri.clone(), this.materialSelection.clone() );
+//        var material = this.getRandomMaterial();
+        var material = this.materialsSolid[0];
+        var mesh = new THREE.Mesh( this.geoTri.clone(), material.clone() );
         mesh.geometry.dynamic = true;
         mesh.touchid = touchid;
         this.selectionMeshes.push( mesh );
@@ -428,61 +430,80 @@ Trimeshter.prototype.onEnd = function( event ) {
         for (var i = this.selectionMeshes.length - 1; i >= 0; i--) {
             var mesh = this.selectionMeshes[i];
 
-            if(mesh.touchid == event.id){
+            if (mesh.touchid == event.id) {
 
                 mesh.geometry.vertices[2].z = z;
+
                 // add new Mesh to scene
-                var meshClone = new THREE.Mesh( mesh.geometry.clone(), material );
-                meshClone.geometry.dynamic = true;
-                this.allMeshes.push( meshClone);
-                this.scene.add( meshClone );
+                var meshClone = new THREE.Mesh(mesh.geometry.clone(), material);
 
-                if(this.config.tween.active) {
+                // add a second, wireframe mesh to the scene
+                var meshClone2 = new THREE.Mesh(mesh.geometry.clone(), this.materialsWire[1].clone());
+                meshClone2.scale.x = meshClone2.scale.y = meshClone2.scale.z = 1.01;
 
-                    // initial growth tween
-                    var vertex = meshClone.geometry.vertices[2];
-                    var targetPoint = vertex.clone();
-                    var ungrownPoint = meshClone.geometry.vertices[0];
-                    vertex.set(ungrownPoint.x, ungrownPoint.y, ungrownPoint.z);
-                    TweenMax.to(vertex, this.config.tween.growDuration, {
-                        ease: Cubic.easeOut,
-                        x: targetPoint.x,
-                        y: targetPoint.y,
-                        z: targetPoint.z
-                    });
-
-                    // Lifetime tween
-                    TweenMax.to(meshClone, this.config.tween.lifetime, {
-                        onComplete: killMesh,
-                        onUpdate: function(){
-                            this.target.geometry.verticesNeedUpdate = true;
-                        }
-                    });
-
-                    // Transition out at end of lifetime
-                    TweenMax.to(vertex, this.config.tween.growDuration, {
-                        delay: this.config.tween.lifetime - this.config.tween.growDuration,
-                        ease: Expo.easeIn,
-                        onStart:function(){
-                            this.updateTo({
-                                x: meshClone.geometry.vertices[0].x,
-                                y: meshClone.geometry.vertices[0].y,
-                                z: meshClone.geometry.vertices[0].z
-                            });
-                        }
-                    })
-                }
-
-                function killMesh(){
-                    self.allMeshes.splice( self.allMeshes.indexOf(this.target),1);
-                    self.scene.remove(this.target);
+                // Add the meshes to the scene
+                var newMeshes = [meshClone, meshClone2];
+                for (m in newMeshes) {
+                    this.growNewObject(newMeshes[m]);
                 }
 
             }
-        }
 
-        this.removeSelectionMeshes(event.id);
+            this.removeSelectionMeshes(event.id);
+        }
     }
+};
+
+Trimeshter.prototype.growNewObject = function (mesh) {
+    mesh.geometry.dynamic = true;
+    this.allMeshes.push(mesh);
+    this.scene.add(mesh);
+
+    if(this.config.tween.active) {
+
+        // initial growth tween
+        var vertex = mesh.geometry.vertices[2];
+        var targetPoint = vertex.clone();
+        var ungrownPoint = mesh.geometry.vertices[0];
+        vertex.set(ungrownPoint.x, ungrownPoint.y, ungrownPoint.z);
+        TweenMax.to(vertex, this.config.tween.growDuration, {
+            ease: Cubic.easeOut,
+            x: targetPoint.x,
+            y: targetPoint.y,
+            z: targetPoint.z
+        });
+
+        // Lifetime tween
+        TweenMax.to(mesh, this.config.tween.lifetime, {
+            onComplete: this.killMesh,
+            onCompleteParams: ["{self}"],
+            onUpdate: function(){
+                this.target.geometry.verticesNeedUpdate = true;
+            }
+        });
+
+        // Transition out at end of lifetime
+        TweenMax.to(vertex, this.config.tween.growDuration, {
+            delay: this.config.tween.lifetime - this.config.tween.growDuration,
+            ease: Expo.easeIn,
+            onStart:function(){
+                this.updateTo({
+                    x: mesh.geometry.vertices[0].x,
+                    y: mesh.geometry.vertices[0].y,
+                    z: mesh.geometry.vertices[0].z
+                });
+            }
+        })
+    }
+
+};
+
+Trimeshter.prototype.killMesh = function(tween){
+    var idx = this.allMeshes.indexOf(tween.target);
+    if(idx > -1){
+        this.allMeshes.splice( idx,1);
+    }
+    this.scene.remove(tween.target);
 };
 
 /**
