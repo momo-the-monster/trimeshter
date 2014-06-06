@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Caress Canvas</title>
+    <title>Touch To NetCursor</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width" user-scalable="no">
     <style type="text/css">
@@ -68,9 +68,9 @@
         var canvas = document.getElementById('canvas');
         window.netCursor = new mmmInput.NetCursor({
             element: canvas,
-            start: onStart,
-            move: onMove,
-            end: onEnd,
+            onStart: onStart,
+            onMove: onMove,
+            onEnd: onEnd,
             sendTouches: true,
             sendMouse: true
         });
@@ -83,11 +83,11 @@
             document.body.className = document.body.className.replace("wsActive", "");
         });
 
-        canvas.addEventListener("touchstart", handleStart, false);
-        canvas.addEventListener("touchend", handleEnd, false);
-        canvas.addEventListener("touchcancel", handleCancel, false);
-        canvas.addEventListener("touchleave", handleEnd, false);
-        canvas.addEventListener("touchmove", handleMove, false);
+        canvas.addEventListener("touchstart", onTouchStart, false);
+        canvas.addEventListener("touchend", onTouchEnd, false);
+        canvas.addEventListener("touchcancel", onTouchEnd, false);
+        canvas.addEventListener("touchleave", onTouchEnd, false);
+        canvas.addEventListener("touchmove", onTouchMove, false);
     }
 
     function onStart(cursor) {
@@ -115,7 +115,7 @@
         return -1;    // not found
     }
 
-    function handleStart(evt) {
+    function onTouchStart(evt) {
         evt.preventDefault();
         var touches = evt.changedTouches;
 
@@ -125,7 +125,7 @@
 
     }
 
-    function handleMove(evt) {
+    function onTouchMove(evt) {
         evt.preventDefault();
         var touches = evt.changedTouches;
 
@@ -135,23 +135,13 @@
         }
     }
 
-    function handleEnd(evt) {
+    function onTouchEnd(evt) {
         evt.preventDefault();
         var touches = evt.changedTouches;
 
         for (var i = 0; i < touches.length; i++) {
             var idx = ongoingTouchIndexById(touches[i].identifier);
             ongoingTouches.splice(idx, 1);  // remove it; we're done
-        }
-
-    }
-
-    function handleCancel(evt) {
-        evt.preventDefault();
-        var touches = evt.changedTouches;
-
-        for (var i = 0; i < touches.length; i++) {
-            ongoingTouches.splice(i, 1);  // remove it; we're done
         }
     }
 
