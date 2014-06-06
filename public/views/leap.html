@@ -22,10 +22,12 @@
     <script type="text/javascript" src="../scripts/input/inputLeap.js"></script>
     <script type="text/javascript">
         var canvas = document.getElementById('canvas');
+        var trimeshter = new mmm.Trimeshter(canvas);
         window.leapInput = new mmmInput.LeapInput({
-            onStart: onStart,
-            onMove: onMove,
-            onEnd: onEnd
+            three: trimeshter.three,
+            onStart: trimeshter.onStart,
+            onMove: trimeshter.onMove,
+            onEnd: trimeshter.onEnd
         });
     </script>
 </body>
