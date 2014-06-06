@@ -30,20 +30,24 @@
         <script type="text/javascript" src="../scripts/vendor/socket.io-0.9.10.min.js"></script>
 
         <!-- Source Includes -->
-        <!--<script type="text/javascript" src="../scripts/input/inputWS.js"></script>-->
         <script type="text/javascript" src="../scripts/input/inputNetCursor.js"></script>
         <script type="text/javascript" src="../scripts/trimeshter.js"></script>
+
+        <!-- Setup Scene and Input -->
         <script type="text/javascript">
             var canvas = document.getElementById('canvas');
+
+            window.trimeshter = new mmm.Trimeshter(canvas);
             window.netCursor = new mmmInput.NetCursor({
                 element: canvas,
-                onStart: onStart,
-                onMove: onMove,
-                onEnd: onEnd,
+                onStart: trimeshter.onStart,
+                onMove: trimeshter.onMove,
+                onEnd: trimeshter.onEnd,
                 sendTouches: true,
                 sendMouse: false
             });
         </script>
+
         <div id="address-label">blumac.local:3456</div>
     </body>
 </html>

@@ -1,56 +1,75 @@
-var camera, scene, renderer, projector;     // Boilerplate Three.js items
-var wall;                                   // Touch points intersect wall to find scene positions
-var allMeshes = new Array();                // Generated mesh items stored here
-var selectionMeshes = new Array();          // In-progress selection meshes
-var geoTri;                                 // Master object used to create new meshes
-var materialSelection;                      // Material applied to selection meshes
-var materials;                              // Currently selected material array
-var materialsSolid;                         // Solid material array, used by default
-var materialsWire;                          // Wireframe material array, selectable in GUI
+var mmm = mmm || {};
+mmm.Trimeshter = mmm.Trimeshter || {};
 
-var config = {
-    mirror:false,
-    connectToSelf:false,
-    randomZ: 10,
-    wireframe: false,
-    tween:{
-        active: true,
-        growDuration: 0.5,
-        lifetime: 10
-    },
-    drift:{
-        x: 0.0,
-        y: 0.0,
-        z: 0.0
-    }
+var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
 
-};          // Config options, all adjustable via dat.GUI
+    this.wall = {};                 // Touch points intersect wall to find scene positions
+    this.allMeshes = [];            // Generated mesh items stored here
+    this.selectionMeshes = [];      // In-progress selection meshes
+    this.geoTri = {};               // Master object used to create new meshes
+    this.materialSelection = {};    // Material applied to selection meshes
+    this.materials = [];            // Currently selected material array
+    this.materialsSolid = [];       // Solid material array, used by default
+    this.materialsWire = [];         // Wireframe material array, selectable in GUI
+    this.canvas = canvas;
+
+    _.bindAll(this, 'onStart', 'onMove', 'onEnd', 'animate');
+
+    this.init();
+};
 
 /**
  * Calls all init modules
  */
-var init = function () {
-    initGui();
-    initThree();
-    initMaterials();
+Trimeshter.prototype.init =  function () {
+    this.initConfig();
+    this.initGui();
+    this.initThree();
+    this.initMaterials();
+    this.animate();
+};
+
+/**
+ * Setup custom config settings
+ * These are all adjustable from dat.GUI
+ */
+Trimeshter.prototype.initConfig = function() {
+    this.config = {
+        mirror: false,
+        connectToSelf: false,
+        randomZ: 10,
+        wireframe: false,
+        tween: {
+            active: true,
+            growDuration: 0.5,
+            lifetime: 10
+        },
+        drift: {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0
+        }
+    };
 };
 
 /**
  * Set up Dat.GUI controls
  */
-function initGui(){
+Trimeshter.prototype.initGui = function(){
     var gui = new dat.GUI({
         preset: 'Default',
         load:
             '{"remembered":{"Default":{"0":{"mirror":false,"connectToSelf":false,"wireframe":false,"randomZ":10},"1":{"x":0,"y":0,"z":0},"2":{"active":true,"growDuration":0.5,"lifetime":10}},"Shrink":{"0":{"mirror":false,"connectToSelf":false,"wireframe":false,"randomZ":10},"1":{"x":0,"y":0,"z":-3},"2":{"active":true,"growDuration":0.5,"lifetime":10}},"OffLeft":{"0":{"mirror":false,"connectToSelf":false,"wireframe":false,"randomZ":10},"1":{"x":-0.2721006376012407,"y":0,"z":-0.05972772703773899},"2":{"active":true,"growDuration":0.5,"lifetime":20}},"WireCave":{"0":{"mirror":true,"connectToSelf":false,"wireframe":true,"randomZ":10},"1":{"x":0,"y":0,"z":-0.743511976563846},"2":{"active":true,"growDuration":0.5,"lifetime":10}}},"preset":"OffLeft","closed":false,"folders":{"Building":{"preset":"Default","closed":false,"folders":{}},"Tween":{"preset":"Default","closed":false,"folders":{}},"Drift":{"preset":"Default","closed":false,"folders":{}}}}'
-        });
+    });
+
+    var config = this.config;
 
     var guiBuild = gui.addFolder("Building");
     guiBuild.add(config, 'mirror');
     guiBuild.add(config, 'connectToSelf');
     var wframe = guiBuild.add(config, 'wireframe');
     wframe.onChange(function (value) {
-        materials = value ? materialsWire : materialsSolid
+        this.materials = value ? this.materialsWire : this.materialsSolid
     });
     guiBuild.add(config, 'randomZ', 0, 100);
     guiBuild.open();
@@ -70,41 +89,47 @@ function initGui(){
     gui.remember(config);
     gui.remember(config.drift);
     gui.remember(config.tween);
-}
+
+    this.gui = gui;
+};
 
 /**
  * Set up THREE.js scene
  */
-function initThree(){
-    var canvas = document.getElementById("canvas");
-    renderer = new THREE.WebGLRenderer({canvas: canvas, antialias: true});
+Trimeshter.prototype.initThree = function(){
+    var renderer = new THREE.WebGLRenderer({canvas: this.canvas, antialias: true});
 
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
-    projector = new THREE.Projector();
+    var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
+    var projector = new THREE.Projector();
     camera.position.z = 100;
 
     // THREEx plugins
     THREEx.WindowResize(renderer, camera);
 
-    scene = new THREE.Scene();
+    this.scene = new THREE.Scene();
 
     // Make wall for pointer intersection
-    wall = new THREE.Mesh(new THREE.PlaneGeometry(2000, 2000), new THREE.MeshBasicMaterial({color: 0x89898900}));
+    this.wall = new THREE.Mesh(new THREE.PlaneGeometry(2000, 2000), new THREE.MeshBasicMaterial({color: 0x89898900}));
 
     // Set Default objects
-    geoTri = buildMasterObject();
-    materialSelection = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, side: THREE.DoubleSide });
-}
+    this.geoTri = this.buildMasterObject();
+    this.materialSelection = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, side: THREE.DoubleSide });
+
+    // save local variables to Trimeshter object
+    this.renderer = renderer;
+    this.camera = camera;
+    this.projector = projector;
+};
 
 /**
  * Create materials array to use
  * There are several palettes to choose from
  * And we generate a solid and wireframe array of our chosen palette
  */
-function initMaterials(){
+Trimeshter.prototype.initMaterials = function(){
     // Spring Palette from http://www.colourlovers.com/palette/3365617/spring
     var springPalette = [
         [45, 59, 96],
@@ -135,18 +160,18 @@ function initMaterials(){
         [92, 240, 212]
     ];
 
-    materialsSolid = buildMaterials(pl1, false);
-    materialsWire = buildMaterials(pl1, true);
+    this.materialsSolid = this.buildMaterials(pl1, false);
+    this.materialsWire = this.buildMaterials(pl1, true);
 
-    materials = materialsSolid;
-}
+    this.materials = this.materialsSolid;
+};
 
 /**
  * Create the object that will be cloned to create all new objects
  * @returns Geometry
  */
-function buildMasterObject(){
-   var triangle = new THREE.Shape([
+Trimeshter.prototype.buildMasterObject = function(){
+    var triangle = new THREE.Shape([
         new THREE.Vector2 (-0.5,  -0.75),
         new THREE.Vector2 (0.5, -0.75),
         new THREE.Vector2 (0, 0)
@@ -162,7 +187,7 @@ function buildMasterObject(){
     geometry.faceVertexUvs[0][0][1] = new THREE.Vector2( 0, 1 );
 
     return geometry;
-}
+};
 
 /**
  * Generate materials from color palette
@@ -170,7 +195,7 @@ function buildMasterObject(){
  * @param wireframe
  * @returns {Array}
  */
-function buildMaterials( palette, wireframe ){
+Trimeshter.prototype.buildMaterials = function( palette, wireframe ){
     var result = [];
     var width = 256;
     var height = 256;
@@ -207,64 +232,64 @@ function buildMaterials( palette, wireframe ){
     }
 
     return result;
-}
+};
 
 /**
  * Add selection mesh to scene and selectionMeshes array
  * @param touchid
  */
-function addSelectionMeshes(touchid){
-    var numSelectionsToMake = config.mirror ? 2 : 1;
+Trimeshter.prototype.addSelectionMeshes = function(touchid){
+    var numSelectionsToMake = this.config.mirror ? 2 : 1;
     // Create and Add all selection meshes
     for ( var i = 0; i < numSelectionsToMake; i++ ) {
-        var mesh = new THREE.Mesh( geoTri.clone(), materialSelection.clone() );
+        var mesh = new THREE.Mesh( this.geoTri.clone(), this.materialSelection.clone() );
         mesh.geometry.dynamic = true;
         mesh.touchid = touchid;
-        selectionMeshes.push( mesh );
-        scene.add( mesh );
+        this.selectionMeshes.push( mesh );
+        this.scene.add( mesh );
     }
-}
+};
 
 /**
  * Removes selection mesh created by target touch id
  * Splices from selectionMeshes array and removes from scene
  * @param touchid
  */
-function removeSelectionMeshes(touchid){
-    for( var i = selectionMeshes.length - 1; i >= 0; i--){
-        if(selectionMeshes[i].touchid == touchid){
-            var mesh = selectionMeshes.splice(i,1)[0];
-            scene.remove(mesh);
+Trimeshter.prototype.removeSelectionMeshes = function(touchid){
+    for( var i = this.selectionMeshes.length - 1; i >= 0; i--){
+        if(this.selectionMeshes[i].touchid == touchid){
+            var mesh = this.selectionMeshes.splice(i,1)[0];
+            this.scene.remove(mesh);
         }
     }
-}
+};
 
 /**
  * Update all selection meshes
  * Render Scene
  * Call requestAnimationFrame(self)
  */
-var animate = function () {
+Trimeshter.prototype.animate = function () {
 
-    if(config.drift.x != 0 || config.drift.y != 0 || config.drift.z != 0) {
-        for (var i = 0; i < allMeshes.length; i++) {
-            var mesh = allMeshes[i];
+    if(this.config.drift.x != 0 || this.config.drift.y != 0 || this.config.drift.z != 0) {
+        for (var i = 0; i < this.allMeshes.length; i++) {
+            var mesh = this.allMeshes[i];
             for (var v = 0; v < mesh.geometry.vertices.length; v++) {
                 var vertex = mesh.geometry.vertices[v];
-                vertex.x += config.drift.x;
-                vertex.y += config.drift.y;
-                vertex.z += config.drift.z;
+                vertex.x += this.config.drift.x;
+                vertex.y += this.config.drift.y;
+                vertex.z += this.config.drift.z;
             }
             mesh.geometry.verticesNeedUpdate = true;
         }
     }
 
-    for (var i = selectionMeshes.length - 1; i >= 0; i--) {
-        selectionMeshes[i].geometry.verticesNeedUpdate = true;
+    for (var i = this.selectionMeshes.length - 1; i >= 0; i--) {
+        this.selectionMeshes[i].geometry.verticesNeedUpdate = true;
     }
 
-    requestAnimationFrame( animate );
-    renderer.render( scene, camera );
+    this.renderer.render( this.scene, this.camera );
+    requestAnimationFrame( this.animate );
 };
 
 /**
@@ -272,9 +297,9 @@ var animate = function () {
  * Adds new selection mesh
  * @param event has x, y, id
  */
-function onStart( event ){
-    addSelectionMeshes(event.id);
-}
+Trimeshter.prototype.onStart = function( event ){
+    this.addSelectionMeshes(event.id);
+};
 
 /**
  * Main hook for Inputs
@@ -282,17 +307,17 @@ function onStart( event ){
  * TODO: make search its own function?
  * @param event has x, y, id
  */
-function onMove( event ) {
+Trimeshter.prototype.onMove = function( event ){
 
-    var x = ( event.x / renderer.domElement.width ) * 2 - 1;
-    var y = - ( event.y / renderer.domElement.height ) * 2 + 1;
+    var x = ( event.x / this.canvas.width ) * 2 - 1;
+    var y = - ( event.y / this.canvas.height ) * 2 + 1;
     var z = event.z || 0;
 
-    var position = getWorldPosition( x, y );
+    var position = this.getWorldPosition( x, y );
     if( position ) {
-        for (var i = selectionMeshes.length - 1; i >= 0; i--) {
+        for (var i = this.selectionMeshes.length - 1; i >= 0; i--) {
 
-            var mesh = selectionMeshes[i];
+            var mesh = this.selectionMeshes[i];
 
             if (mesh.touchid == event.id) {
 
@@ -300,7 +325,7 @@ function onMove( event ) {
                 var vertex = mesh.geometry.vertices[2];
                 var isEven = (i % 2 == 0);
 
-                if (isEven && config.mirror) {
+                if (isEven && this.config.mirror) {
                     var middle = window.innerWidth / 2;
                     var isRightSide = (position.x > 0);
                     var offset = Math.abs(position.x);
@@ -315,11 +340,11 @@ function onMove( event ) {
                     vertex.x = position.x;
                 }
 
-                var sortedPoints = new Array();
-                var allPoints = new Array();
+                var sortedPoints = [];
+                var allPoints = [];
 
                 // construct allPoints from allMeshes
-                allMeshes.forEach(function (mesh){
+                this.allMeshes.forEach(function (mesh){
                     mesh.geometry.vertices.forEach(function (vertex){
                         allPoints.push( vertex );
                     });
@@ -335,8 +360,8 @@ function onMove( event ) {
                 });
 
                 // search through selection meshes, too
-                if(config.connectToSelf){
-                    selectionMeshes.forEach(function (mesh){
+                if(this.config.connectToSelf){
+                    this.selectionMeshes.forEach(function (mesh){
                         if(mesh.touchid != event.id){
                             for(var i = 0; i < 3; i++){
                                 var point = mesh.geometry.vertices[i];
@@ -346,7 +371,7 @@ function onMove( event ) {
                     });
                 }
 
-                sortByKey(sortedPoints, "d");
+                this.sortByKey(sortedPoints, "d");
 
                 vertex.y = position.y;
                 vertex.z = z;
@@ -380,7 +405,7 @@ function onMove( event ) {
         }
     }
 
-}
+};
 
 /**
  * Main hook for Inputs
@@ -388,19 +413,20 @@ function onMove( event ) {
  * New mesh is assigned a lifetime and grown in with a Tween
  * @param event
  */
-function onEnd( event ) {
+Trimeshter.prototype.onEnd = function( event ) {
 
-    var x = ( event.x / renderer.domElement.width ) * 2 - 1;
-    var y = - ( event.y / renderer.domElement.height ) * 2 + 1;
-    var z = event.z || getRandomArbitrary(config.randomZ, -config.randomZ);;
+    var x = ( event.x / this.canvas.width ) * 2 - 1;
+    var y = - ( event.y / this.canvas.height ) * 2 + 1;
+    var z = event.z || this.getRandomArbitrary(this.config.randomZ, -this.config.randomZ);
+    var self = this;    // store this for use in Tween functions below
 
-    var position = getWorldPosition( x, y );
+    var position = this.getWorldPosition( x, y );
     if( position ) {
         // get material to share for all new meshes
-        var material = getRandomMaterial();
+        var material = this.getRandomMaterial();
 
-        for (var i = selectionMeshes.length - 1; i >= 0; i--) {
-            var mesh = selectionMeshes[i];
+        for (var i = this.selectionMeshes.length - 1; i >= 0; i--) {
+            var mesh = this.selectionMeshes[i];
 
             if(mesh.touchid == event.id){
 
@@ -408,17 +434,17 @@ function onEnd( event ) {
                 // add new Mesh to scene
                 var meshClone = new THREE.Mesh( mesh.geometry.clone(), material );
                 meshClone.geometry.dynamic = true;
-                allMeshes.push( meshClone);
-                scene.add( meshClone );
+                this.allMeshes.push( meshClone);
+                this.scene.add( meshClone );
 
-                if(config.tween.active) {
+                if(this.config.tween.active) {
 
                     // initial growth tween
                     var vertex = meshClone.geometry.vertices[2];
                     var targetPoint = vertex.clone();
                     var ungrownPoint = meshClone.geometry.vertices[0];
                     vertex.set(ungrownPoint.x, ungrownPoint.y, ungrownPoint.z);
-                    TweenMax.to(vertex, config.tween.growDuration, {
+                    TweenMax.to(vertex, this.config.tween.growDuration, {
                         ease: Cubic.easeOut,
                         x: targetPoint.x,
                         y: targetPoint.y,
@@ -426,7 +452,7 @@ function onEnd( event ) {
                     });
 
                     // Lifetime tween
-                    TweenMax.to(meshClone, config.tween.lifetime, {
+                    TweenMax.to(meshClone, this.config.tween.lifetime, {
                         onComplete: killMesh,
                         onUpdate: function(){
                             this.target.geometry.verticesNeedUpdate = true;
@@ -434,8 +460,8 @@ function onEnd( event ) {
                     });
 
                     // Transition out at end of lifetime
-                    TweenMax.to(vertex, config.tween.growDuration, {
-                        delay: config.tween.lifetime - config.tween.growDuration,
+                    TweenMax.to(vertex, this.config.tween.growDuration, {
+                        delay: this.config.tween.lifetime - this.config.tween.growDuration,
                         ease: Expo.easeIn,
                         onStart:function(){
                             this.updateTo({
@@ -448,24 +474,24 @@ function onEnd( event ) {
                 }
 
                 function killMesh(){
-                    allMeshes.splice( allMeshes.indexOf(this.target),1);
-                    scene.remove(this.target);
+                    self.allMeshes.splice( self.allMeshes.indexOf(this.target),1);
+                    self.scene.remove(this.target);
                 }
 
             }
         }
 
-        removeSelectionMeshes(event.id);
+        this.removeSelectionMeshes(event.id);
     }
-}
+};
 
 /**
  * Gets a random selection from the selected materials array
  * @returns THREE.Material
  */
-function getRandomMaterial() {
-    return materials[ Math.floor( Math.random() * materials.length  )];
-}
+Trimeshter.prototype.getRandomMaterial = function() {
+    return this.materials[ Math.floor( Math.random() * this.materials.length  )];
+};
 
 /**
  * Finds the world position from x&y screen positions
@@ -473,33 +499,33 @@ function getRandomMaterial() {
  * @param y
  * @returns {*}
  */
-function getWorldPosition( x, y ) {
+Trimeshter.prototype.getWorldPosition = function( x, y ) {
     var vector = new THREE.Vector3(  x, y, 0 );
-    projector.unprojectVector( vector, camera );
+    this.projector.unprojectVector( vector, this.camera );
 
-    var raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
-    var intersects = raycaster.intersectObjects( [wall] );
+    var raycaster = new THREE.Raycaster( this.camera.position, vector.sub( this.camera.position ).normalize() );
+    var intersects = raycaster.intersectObjects( [this.wall] );
 
     if ( intersects.length > 0 ){
         return( intersects[0].point );
     } else {
         return false;
     }
-}
+};
 
 /**
  * Sorts an array by one of its keys
- * TODO: make this a prototype method?
+ * TODO: make this an array prototype method? Maybe an mmm utils class?
  * @param array
  * @param key
- * @returns {Array|*}
+ * @returns sorted {Array}
  */
-function sortByKey(array, key) {
+Trimeshter.prototype.sortByKey = function(array, key) {
     return array.sort(function(a, b) {
         var x = a[key]; var y = b[key];
         return ((x < y) ? -1 : ((x > y) ? 1 : 0));
     });
-}
+};
 
 /**
  * Returns a random number between min and max
@@ -507,12 +533,6 @@ function sortByKey(array, key) {
  * @param max
  * @returns {*}
  */
-function getRandomArbitrary(min, max) {
+Trimeshter.prototype.getRandomArbitrary = function(min, max) {
     return Math.random() * (max - min) + min;
-}
-
-/**
- * Kick it all off!
- */
-init();
-animate();
+};
