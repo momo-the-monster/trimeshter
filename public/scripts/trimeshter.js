@@ -80,7 +80,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
         guiBuild.add(config, 'connectToSelf');
         var wframe = guiBuild.add(config, 'wireframe');
         wframe.onChange(function (value) {
-            self.materials = value ? self.materialsWire : self.materialsSolid
+            materials = value ? materialsWire : materialsSolid
         });
         guiBuild.add(config, 'randomZ', 0, 100);
         guiBuild.open();
