@@ -1,5 +1,4 @@
 var mmm = mmm || {};
-mmm.Trimeshter = mmm.Trimeshter || {};
 
 var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
 
@@ -66,13 +65,14 @@ Trimeshter.prototype.initGui = function(){
     });
 
     var config = this.config;
+    var self = this;
 
     var guiBuild = gui.addFolder("Building");
     guiBuild.add(config, 'mirror');
     guiBuild.add(config, 'connectToSelf');
     var wframe = guiBuild.add(config, 'wireframe');
     wframe.onChange(function (value) {
-        this.materials = value ? this.materialsWire : this.materialsSolid
+        self.materials = value ? self.materialsWire : self.materialsSolid
     });
     guiBuild.add(config, 'randomZ', 0, 100);
     guiBuild.open();
@@ -246,7 +246,8 @@ Trimeshter.prototype.addSelectionMeshes = function(touchid){
     // Create and Add all selection meshes
     for ( var i = 0; i < numSelectionsToMake; i++ ) {
 //        var material = this.getRandomMaterial();
-        var material = this.materialsSolid[0];
+//        var material = this.materialsSolid[3];
+        var material = this.materialSelection;
         var mesh = new THREE.Mesh( this.geoTri.clone(), material.clone() );
         mesh.geometry.dynamic = true;
         mesh.touchid = touchid;
@@ -442,7 +443,7 @@ Trimeshter.prototype.onEnd = function( event ) {
 
                 // add a second, wireframe mesh to the scene
                 var meshClone2 = new THREE.Mesh(mesh.geometry.clone(), this.materialsWire[1].clone());
-                meshClone2.scale.x = meshClone2.scale.y = meshClone2.scale.z = 1.01;
+                meshClone2.scale.x = meshClone2.scale.y = meshClone2.scale.z = 1.1;
 
                 // Add the meshes to the scene
                 var newMeshes = [meshClone, meshClone2];
