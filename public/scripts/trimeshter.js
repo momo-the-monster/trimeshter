@@ -16,9 +16,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
     var materialsWire = [];        // Wireframe material array, selectable in GUI
     var canvas = canvas;
     var gui = {};
-
-    // Underscore method which binds 'this' to 'trimeshter' in all these functions
-//    _.bindAll(this, 'onStart', 'onMove', 'onEnd', 'animate', 'killMesh');
+    var starfield = {};
 
     // Trimeshter is self-initializing!
     init();
@@ -31,6 +29,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
         gui = initGui();
         initThree();
         initMaterials();
+        initStarfield();
         animate();
     }
 
@@ -40,7 +39,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
      */
     function initConfig() {
         return {
-            mirror: false,
+            mirror: true,
             connectToSelf: false,
             randomZ: 10,
             wireframe: false,
@@ -50,9 +49,17 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
                 lifetime: 10
             },
             drift: {
-                x: 0.0,
+                x: 0,
                 y: 0.0,
                 z: 0.0
+            },
+            starfield: {
+                bounds: {
+                    x: 220,
+                    y: 90,
+                    z: 300
+                },
+                count: 1000
             }
         }
     }
@@ -234,6 +241,59 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
     }
 
     /**
+     * Create starfield particles
+     */
+    function initStarfield(){
+        starfield = new THREE.Object3D();
+
+        var star;
+        var material = generateStarMaterial();
+
+        for (var i = 0; i < config.starfield.count; ++i) {
+            star = new THREE.Particle(material);
+            star.position.x = getRandomArbitrary(-config.starfield.bounds.x, config.starfield.bounds.x);
+            star.position.y = getRandomArbitrary(-config.starfield.bounds.y, config.starfield.bounds.y);
+            star.position.z = getRandomArbitrary(-config.starfield.bounds.z, config.starfield.bounds.z / 4);
+
+            starfield.add(star);
+        }
+
+        scene.add(starfield);
+    }
+
+    /**
+     * Create star-like material
+     * From http://threejs.org/examples/#canvas_particles_sprites
+     * @returns {THREE.SpriteMaterial}
+     */
+    function generateStarMaterial() {
+        // Prepare off-screen canvas
+        var bitmap = document.createElement('canvas');
+        var ctx = bitmap.getContext('2d');
+        bitmap.width = 16;
+        bitmap.height = 16;
+
+        // Draw Gradient
+        var gradient = ctx.createRadialGradient(bitmap.width / 2, bitmap.height / 2, 0, bitmap.width / 2, bitmap.height / 2, bitmap.width / 2);
+        gradient.addColorStop(0, 'rgba(255,255,255,1)');
+        gradient.addColorStop(0.4, 'rgba(64,64,64,1)');
+        gradient.addColorStop(1, 'rgba(0,0,0,1)');
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, bitmap.width, bitmap.height);
+
+        var texture = new THREE.Texture(bitmap);
+        texture.needsUpdate = true;
+
+        var material = new THREE.SpriteMaterial({
+            map: texture,
+            blending: THREE.AdditiveBlending
+        });
+
+        return material;
+    }
+
+    /**
      * Add selection mesh to scene and selectionMeshes array
      * @param touchid
      */
@@ -271,7 +331,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
      * Render Scene
      * Call requestAnimationFrame(self)
      */
-    function animate() {
+    function animate(time) {
 
         if (config.drift.x != 0 || config.drift.y != 0 || config.drift.z != 0) {
             for (var i = 0; i < allMeshes.length; i++) {
@@ -284,6 +344,32 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
                 }
                 mesh.geometry.verticesNeedUpdate = true;
             }
+
+            starfield.children.forEach( function(star){
+                star.position.x += config.drift.x;
+                star.position.y += config.drift.y;
+                star.position.z += config.drift.z;
+
+                if(star.position.x > config.starfield.bounds.x){
+                    star.position.x = -config.starfield.bounds.x;
+                }
+                if (star.position.x < -config.starfield.bounds.x) {
+                    star.position.x = config.starfield.bounds.x;
+                }
+                if (star.position.y > config.starfield.bounds.y) {
+                    star.position.y = -config.starfield.bounds.y;
+                }
+                if (star.position.y < -config.starfield.bounds.y) {
+                    star.position.y = config.starfield.bounds.y;
+                }
+                if (star.position.z > config.starfield.bounds.z) {
+                    star.position.z = -config.starfield.bounds.z;
+                }
+                if (star.position.z < -config.starfield.bounds.z) {
+                    star.position.z = config.starfield.bounds.z;
+                }
+            });
+
         }
 
         for (var i = selectionMeshes.length - 1; i >= 0; i--) {
@@ -426,31 +512,29 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
         if (position) {
             // get material to share for all new meshes
             var material = getRandomMaterial();
+            for (var i = 0; i < selectionMeshes.length; i++) {
 
-            for (var i = selectionMeshes.length - 1; i >= 0; i--) {
                 var mesh = selectionMeshes[i];
 
                 if (mesh.touchid == event.id) {
-
                     mesh.geometry.vertices[2].z = z;
 
                     // add new Mesh to scene
                     var meshClone = new THREE.Mesh(mesh.geometry.clone(), material);
-
-                    // add a second, wireframe mesh to the scene
-                    var meshClone2 = new THREE.Mesh(mesh.geometry.clone(), materialsWire[1].clone());
-                    meshClone2.scale.x = meshClone2.scale.y = meshClone2.scale.z = 1.1;
+                    var meshWire = new THREE.Mesh(mesh.geometry.clone(), materialsWire[4]);
+                    meshWire.position.z += 1.5;
 
                     // Add the meshes to the scene
-                    var newMeshes = [meshClone, meshClone2];
+                    var newMeshes = [meshClone, meshWire];
                     for (m in newMeshes) {
                         growNewObject(newMeshes[m]);
                     }
 
                 }
-                // kill selection meshes once the piece has been grown
-                removeSelectionMeshes(event.id);
+
             }
+            // kill selection meshes once the piece has been grown
+            removeSelectionMeshes(event.id);
         }
     }
 
@@ -568,10 +652,14 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
         return Math.random() * (max - min) + min;
     }
 
+    /**
+     * Return some public properties
+     */
     return {
         onStart: onStart,
         onMove: onMove,
         onEnd: onEnd,
+        starfield: starfield,
         three: {
             renderer: renderer,
             scene: scene,
