@@ -21,6 +21,10 @@ var LeapInput = mmmInput.LeapInput = function LeapInput(options) {
     camera = three.camera;
     scene = three.scene;
     renderer = three.renderer;
+    var triggerRange = 0.001;
+    var triggerSpot = 0.973
+    var triggerMin = triggerSpot - triggerRange;
+    var triggerMax = triggerSpot + triggerRange;
 
     /**
      * Initialize Leap Controller and rigged hand
@@ -71,7 +75,7 @@ var LeapInput = mmmInput.LeapInput = function LeapInput(options) {
                 var scenePosition = handMesh.screenPosition(hand.fingers[i].stabilizedTipPosition, camera);
                 var event = {x: scenePosition.x, y: window.innerHeight - scenePosition.y, z:scenePosition.z, id: id};
 
-                if (finger.touchZone == "touching") {
+                if (scenePosition.z > triggerMin && scenePosition.z < triggerMax) {
                     if (idx >= 0) {
                         if(self.onMove !== null) {
                             self.onMove(event);
