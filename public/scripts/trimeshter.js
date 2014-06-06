@@ -76,7 +76,8 @@ function initGui(){
  * Set up THREE.js scene
  */
 function initThree(){
-    renderer = new THREE.WebGLRenderer({antialias: true});
+    var canvas = document.getElementById("canvas");
+    renderer = new THREE.WebGLRenderer({canvas: canvas, antialias: true});
 
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
@@ -285,7 +286,7 @@ function onMove( event ) {
 
     var x = ( event.x / renderer.domElement.width ) * 2 - 1;
     var y = - ( event.y / renderer.domElement.height ) * 2 + 1;
-    var z = 0;
+    var z = event.z || 0;
 
     var position = getWorldPosition( x, y );
     if( position ) {
@@ -387,10 +388,11 @@ function onMove( event ) {
  * New mesh is assigned a lifetime and grown in with a Tween
  * @param event
  */
-function onFinish( event ) {
+function onEnd( event ) {
 
     var x = ( event.x / renderer.domElement.width ) * 2 - 1;
     var y = - ( event.y / renderer.domElement.height ) * 2 + 1;
+    var z = event.z || getRandomArbitrary(config.randomZ, -config.randomZ);;
 
     var position = getWorldPosition( x, y );
     if( position ) {
@@ -401,7 +403,8 @@ function onFinish( event ) {
             var mesh = selectionMeshes[i];
 
             if(mesh.touchid == event.id){
-                mesh.geometry.vertices[2].z = getRandomArbitrary(config.randomZ, -config.randomZ);
+
+                mesh.geometry.vertices[2].z = z;
                 // add new Mesh to scene
                 var meshClone = new THREE.Mesh( mesh.geometry.clone(), material );
                 meshClone.geometry.dynamic = true;
