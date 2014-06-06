@@ -74,7 +74,6 @@
             sendTouches: true,
             sendMouse: true
         });
-        netCursor.connect();
 
         netCursor.socket.on("connect", function(){
             document.body.className += " wsActive";
