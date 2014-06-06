@@ -1,19 +1,23 @@
 var mmmInput = mmmInput || {};
 
+mmmInput.NetCursor = mmmInput.NetCursor || {};
+
 var NetCursor = mmmInput.NetCursor = function NetCursor(options) {
     options = options || {};
     this.element = options.element || null;
+    this.autoConnect = options.autoConnect | true;
     this.connected = false;
     this.cursors = {};
-    this.start = options.start || null;
-    this.move = options.move || null;
-    this.end = options.end || null;
+    this.onStart = options.onStart || null;
+    this.onMove = options.onMove || null;
+    this.onEnd = options.onEnd || null;
     this.sendMouse = options.sendMouse || null;
     this.sendTouches = options.sendTouches || null;
     this.mouseDown = false;
 
     _.bindAll(this, 'connect', 'onConnect', 'onDisconnect', 'onTouchStart', 'onTouchEnd', 'onTouchMove', 'onMouseMove', 'onMouseUp', 'onMouseDown', 'processCursorStart', 'processCursorMove', 'processCursorEnd');
 
+    // listen for touch events
     if (this.element !== null && this.sendTouches === true) {
         this.element.addEventListener("touchstart", this.onTouchStart, false);
         this.element.addEventListener("touchend", this.onTouchEnd, false);
@@ -22,10 +26,16 @@ var NetCursor = mmmInput.NetCursor = function NetCursor(options) {
         this.element.addEventListener("touchmove", this.onTouchMove, false);
     }
 
+    // listen for mouse events
     if (this.element !== null && this.sendMouse === true) {
         this.element.addEventListener("mousemove", this.onMouseMove, false);
         this.element.addEventListener("mousedown", this.onMouseDown, false);
         this.element.addEventListener("mouseup", this.onMouseUp, false);
+    }
+
+    // autostart
+    if(this.autoConnect){
+        this.connect();
     }
 
 };
@@ -81,7 +91,6 @@ NetCursor.prototype.onMouseUp = function (event) {
 };
 
 NetCursor.prototype.mouseEventToCursor = function(event){
-    console.log('x', event.clientX / this.element.width);
     return {
         x: event.clientX / this.element.width,
         y: event.clientY / this.element.height,
@@ -128,8 +137,8 @@ NetCursor.prototype.touchToCursor = function(touch){
 
 NetCursor.prototype.processCursorStart = function( cursor ){
     var touch = this.cursorToTouch(cursor);
-    if(this.start){
-        this.start(touch);
+    if(this.onStart){
+        this.onStart(touch);
     }
     this.cursors[cursor.id] = cursor;
 };
@@ -137,8 +146,8 @@ NetCursor.prototype.processCursorStart = function( cursor ){
 NetCursor.prototype.processCursorMove = function (cursor) {
     if(this.cursors[cursor.id] !== undefined){
         var touch = this.cursorToTouch(cursor);
-        if(this.move){
-            this.move(touch);
+        if(this.onMove){
+            this.onMove(touch);
         }
         this.cursors[cursor.id] = cursor;
     }
@@ -146,8 +155,8 @@ NetCursor.prototype.processCursorMove = function (cursor) {
 
 NetCursor.prototype.processCursorEnd = function (cursor) {
     var touch = this.cursorToTouch(cursor);
-    if(this.end){
-        this.end(touch);
+    if(this.onEnd){
+        this.onEnd(touch);
     }
     delete this.cursors[cursor.id];
 };
@@ -162,6 +171,10 @@ NetCursor.prototype.cursorToTouch = function(cursor){
         screenY: screen.height * cursor.y,
         identifier: cursor.id
     };
+    touch.x = touch.clientX;
+    touch.y = touch.clientY;
+    touch.z = cursor.z;
+    touch.id = cursor.id;
     touch.target = document.elementFromPoint(touch.pageX, touch.pageY);
     return touch;
 };
