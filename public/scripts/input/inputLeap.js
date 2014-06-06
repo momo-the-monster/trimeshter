@@ -9,6 +9,18 @@ var LeapInput = mmmInput.LeapInput = function LeapInput(options) {
     this.onEnd = options.onEnd || null;
     this.leapTouches = [];
     var self = this;
+    var three = options.three || null;
+    var camera, scene, renderer;
+
+    // Abort if we haven't passed a three scene in here
+    if(three === null) {
+        console.log("Can't setup Leap visualization without an active Three scene");
+        return false;
+    }
+
+    camera = three.camera;
+    scene = three.scene;
+    renderer = three.renderer;
 
     /**
      * Initialize Leap Controller and rigged hand
