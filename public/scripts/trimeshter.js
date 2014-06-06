@@ -49,8 +49,8 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
                 lifetime: 10
             },
             drift: {
-                x: 0,
-                y: 0.0,
+                x: 0.0,
+                y: -0.1,
                 z: 0.0
             },
             starfield: {
@@ -68,12 +68,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
      * Set up Dat.GUI controls
      */
     function initGui() {
-        var gui = new dat.GUI({
-            preset: 'Default',
-            load: '{"remembered":{"Default":{"0":{"mirror":false,"connectToSelf":false,"wireframe":false,"randomZ":10},"1":{"x":0,"y":0,"z":0},"2":{"active":true,"growDuration":0.5,"lifetime":10}},"Shrink":{"0":{"mirror":false,"connectToSelf":false,"wireframe":false,"randomZ":10},"1":{"x":0,"y":0,"z":-3},"2":{"active":true,"growDuration":0.5,"lifetime":10}},"OffLeft":{"0":{"mirror":false,"connectToSelf":false,"wireframe":false,"randomZ":10},"1":{"x":-0.2721006376012407,"y":0,"z":-0.05972772703773899},"2":{"active":true,"growDuration":0.5,"lifetime":20}},"WireCave":{"0":{"mirror":true,"connectToSelf":false,"wireframe":true,"randomZ":10},"1":{"x":0,"y":0,"z":-0.743511976563846},"2":{"active":true,"growDuration":0.5,"lifetime":10}}},"preset":"OffLeft","closed":false,"folders":{"Building":{"preset":"Default","closed":false,"folders":{}},"Tween":{"preset":"Default","closed":false,"folders":{}},"Drift":{"preset":"Default","closed":false,"folders":{}}}}'
-        });
-
-        var self = this;
+        var gui = new dat.GUI();
 
         var guiBuild = gui.addFolder("Building");
         guiBuild.add(config, 'mirror');
@@ -97,9 +92,10 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
         guiDrift.add(config.drift, 'z', -3, 0.1);
         guiDrift.open();
 
-        gui.remember(config);
-        gui.remember(config.drift);
-        gui.remember(config.tween);
+//        Why isn't remember working?
+//        gui.remember(config);
+//        gui.remember(config.drift);
+//        gui.remember(config.tween);
 
         return gui;
     }
