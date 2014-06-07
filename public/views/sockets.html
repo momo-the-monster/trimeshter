@@ -82,30 +82,48 @@
      * Timbre Stuff
      */
 
+/*    var synth = T("SynthDef").play();
+
+    synth.def = function(opts) {
+        var VCO = T("sin", {freq:opts.freq});
+
+        var cutoff = T("env", {table:[1000, [opts.freq, 100]]}).bang();
+        var VCF    = T("lpf", {cutoff:cutoff, Q:5}, VCO);
+
+        var EG  = T("adsr", {a:100, d:100, s:1, r:200, lv:0.6});
+        var VCA = EG.append(VCF).bang();
+
+        return VCA;
+    };*/
+
     var synth = T("SynthDef").play();
 
     synth.def = function(opts) {
         var VCO = T("saw", {freq:opts.freq});
 
-        var cutoff = T("env", {table:[8000, [opts.freq, 250]]}).bang();
-        var VCF    = T("lpf", {cutoff:cutoff, Q:5}, VCO);
+        var cutoff = T("env", {table:[2000, [opts.freq, 2000]]}).bang();
+        var VCF    = T("lpf", {cutoff:cutoff, Q:20}, VCO);
 
-        var EG  = T("adsr", {a:150, d:500, s:1, r:1500, lv:0.6});
+        var EG  = T("adsr", {a:150, s:0.45, r:100, lv:0.1});
         var VCA = EG.append(VCF).bang();
 
         return VCA;
     };
+
+    synth.poly = 64;
 
     var notes = {};
 
     function audioStart(cursor){
 
         var pentatonic = [0, 2, 4, 7, 9];
-        var noteNormalized = Math.round(cursor.x / window.innerWidth * 5);
+        for( var i = 0; i < 15; i++){
+            pentatonic.push( pentatonic[i] + 12);
+        }
+        var noteNormalized = cursor.x / window.innerWidth;
         var noteIndex = Math.floor(noteNormalized * pentatonic.length);
-
-        var noteNum = 48 + noteIndex;
-        synth.noteOn(noteNum);
+        var noteNum = 36 + noteIndex;
+        synth.noteOn(noteNum, 127);
         notes[cursor.id] = noteNum;
     }
 
@@ -117,7 +135,6 @@
         var noteNum = notes[cursor.id];
         synth.noteOff(noteNum);
         delete notes[cursor.id];
-        console.log('turning off', noteNum);
     }
 
     /**
