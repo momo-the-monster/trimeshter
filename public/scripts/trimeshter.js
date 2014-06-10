@@ -84,7 +84,6 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
         guiTween.add(config.tween, 'active');
         guiTween.add(config.tween, 'growDuration', 0, 3);
         guiTween.add(config.tween, 'lifetime', 3, 100);
-        guiTween.open();
 
         var guiDrift = gui.addFolder("Drift");
         guiDrift.add(config.drift, 'x', -1, 1);
