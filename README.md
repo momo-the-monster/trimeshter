@@ -4,7 +4,9 @@ Work-in-progress piece for the [Portland Tuio Jam](http://ctrl-art.github.io/tui
 
 [Demo for Leap and Touchscreen](http://momo-the-monster.github.io/trimeshter/)
 
----
+## Leap Motion Control
+
+This demo uses the new Skeletal Tracking features of the [Leap](https://www.leapmotion.com/). You'll need a Leap Motion Device and the newest versions of the driver (you should be prompted with a link to upgrade if needed).
 
 ## Touch Socket Server
 
