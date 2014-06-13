@@ -655,6 +655,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
         onMove: onMove,
         onEnd: onEnd,
         starfield: starfield,
+        config: config,
         three: {
             renderer: renderer,
             scene: scene,
