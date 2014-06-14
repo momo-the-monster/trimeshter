@@ -12,10 +12,10 @@ var UncontextCursor = mmmInput.UncontextCursor = function UncontextCursor(option
     var config = options.config || null;
 
     // track high numbers for a, b, f and g
-    var ahi = 0;
-    var bhi = 0;
-    var fhi = 0;
-    var ghi = 0;
+    var maxA = 25;
+    var maxB = 20;
+    var maxF = 400;
+    var maxG = 467;
 
     // Start with no drift
     config.drift.x = config.drift.y = config.drift.z = 0;
@@ -24,15 +24,9 @@ var UncontextCursor = mmmInput.UncontextCursor = function UncontextCursor(option
 
         var data = JSON.parse(message.data);
 
-        // Update max records
-        ahi = Math.max(data.a, ahi);
-        bhi = Math.max(data.b, bhi);
-        fhi = Math.max(data.e.f, fhi);
-        ghi = Math.max(data.e.g, ghi);
-
         // Convert A and B to X and Y
-        var aDiff = window.innerWidth / ahi;
-        var bDiff = window.innerHeight / bhi;
+        var aDiff = window.innerWidth / maxA;
+        var bDiff = window.innerHeight / maxB;
 
         var x = aDiff * data.a;
         var y = bDiff * data.b;
@@ -40,8 +34,8 @@ var UncontextCursor = mmmInput.UncontextCursor = function UncontextCursor(option
         var event = {x: x, y: y, z: 0, id: 0};
 
         // Convert F and G to Drifts
-        var fDiff = 1 / fhi;
-        var gDiff = 1 / ghi;
+        var fDiff = 1 / maxF;
+        var gDiff = 1 / maxG;
         var yDrift = fDiff * data.e.f;
         var zDrift = gDiff * data.e.g;
         yDrift -= 0.5;
