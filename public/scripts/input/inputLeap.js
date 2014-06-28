@@ -74,17 +74,18 @@ var LeapInput = mmmInput.LeapInput = function LeapInput(options) {
                 // get scene position
                 var scenePosition = handMesh.screenPosition(hand.fingers[i].stabilizedTipPosition, camera);
                 var event = {x: scenePosition.x, y: window.innerHeight - scenePosition.y, z:scenePosition.z, id: id};
+                var cursor = self.normalizePoint(event);
+//                if (scenePosition.z > triggerMin && scenePosition.z < triggerMax) {
+                if (finger.touchZone == "touching") {
 
-               if (scenePosition.z > triggerMin && scenePosition.z < triggerMax) {
-//                if (finger.touchZone == "touching") {
                     if (idx >= 0) {
                         if(self.onMove !== null) {
-                            self.onMove(event);
+                            self.onMove(cursor);
                         }
                         self.leapTouches.splice(idx, 1, event);
                     } else {
                         if(self.onStart !== null) {
-                            self.onStart(event);
+                            self.onStart(cursor);
                         }
                         self.leapTouches.push(event);
                     }
@@ -92,7 +93,7 @@ var LeapInput = mmmInput.LeapInput = function LeapInput(options) {
                     // test that a touch exists before we try to finish it
                     if (idx >= 0) {
                         if(self.onEnd !== null) {
-                            self.onEnd(event);
+                            self.onEnd(cursor);
                         }
                         self.leapTouches.splice(idx, 1);
                     }
@@ -101,6 +102,19 @@ var LeapInput = mmmInput.LeapInput = function LeapInput(options) {
             } // end of finger loop
         } // end of hand loop
     });
+};
+
+/**
+ * Turn Leap scene point into normalized cursor
+ * @param point
+ * @returns {{x: number, y: number, z: *}}
+ */
+LeapInput.prototype.normalizePoint = function(point){
+    return {
+        x: point.x / window.innerWidth,
+        y: point.y / window.innerHeight,
+        z: point.z
+    }
 };
 
 /**
