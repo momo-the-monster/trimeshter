@@ -92,8 +92,8 @@ NetCursor.prototype.onMouseUp = function (event) {
 
 NetCursor.prototype.mouseEventToCursor = function(event){
     return {
-        x: event.clientX / this.element.width,
-        y: event.clientY / this.element.height,
+        x: event.clientX / window.innerWidth,
+        y: event.clientY / window.innerHeight,
         z: 0,
         id: 0
     }
@@ -128,53 +128,32 @@ NetCursor.prototype.onTouchEnd = function (event) {
 
 NetCursor.prototype.touchToCursor = function(touch){
     return {
-        x: touch.clientX / this.element.width,
-        y: touch.clientY / this.element.height,
+        x: touch.clientX / window.innerWidth,
+        y: touch.clientY / window.innerHeight,
         z: 0,
         id: touch.identifier
     }
 };
 
 NetCursor.prototype.processCursorStart = function( cursor ){
-    var touch = this.cursorToTouch(cursor);
     if(this.onStart){
-        this.onStart(touch);
+        this.onStart(cursor);
     }
     this.cursors[cursor.id] = cursor;
 };
 
 NetCursor.prototype.processCursorMove = function (cursor) {
     if(this.cursors[cursor.id] !== undefined){
-        var touch = this.cursorToTouch(cursor);
         if(this.onMove){
-            this.onMove(touch);
+            this.onMove(cursor);
         }
         this.cursors[cursor.id] = cursor;
     }
 };
 
 NetCursor.prototype.processCursorEnd = function (cursor) {
-    var touch = this.cursorToTouch(cursor);
     if(this.onEnd){
-        this.onEnd(touch);
+        this.onEnd(cursor);
     }
     delete this.cursors[cursor.id];
-};
-
-NetCursor.prototype.cursorToTouch = function(cursor){
-    var touch =  {
-        clientX: window.innerWidth * cursor.x,
-        clientY: window.innerHeight * cursor.y,
-        pageX: document.documentElement.clientWidth * cursor.x,
-        pageY: document.documentElement.clientHeight * cursor.y,
-        screenX: screen.width * cursor.x,
-        screenY: screen.height * cursor.y,
-        identifier: cursor.id
-    };
-    touch.x = touch.clientX;
-    touch.y = touch.clientY;
-    touch.z = cursor.z;
-    touch.id = cursor.id;
-    touch.target = document.elementFromPoint(touch.pageX, touch.pageY);
-    return touch;
 };
