@@ -31,40 +31,20 @@
         var canvas = document.getElementById('canvas');
         var trimeshter = new mmm.Trimeshter(canvas);
 
-        // Hook up Leap Input
-        window.leapInput = new mmmInput.LeapInput({
+        // create params object with all required config settings for inputs
+        var params = {
             three: trimeshter.three,
-            onStart: trimeshter.onStart,
-            onMove: trimeshter.onMove,
-            onEnd: trimeshter.onEnd
-        });
-
-        // Hook up Socket Input
-        var netCursor = new mmmInput.NetCursor({
-            element: canvas,
             onStart: trimeshter.onStart,
             onMove: trimeshter.onMove,
             onEnd: trimeshter.onEnd,
             sendTouches: true,
             sendMouse: false
-        });
+        };
 
-        // Hook up Touch Input
-        var touchInput = new mmmInput.TouchInput({
-            element: canvas,
-            onStart: trimeshter.onStart,
-            onMove: trimeshter.onMove,
-            onEnd: trimeshter.onEnd
-        });
-
-        // Tuio Input
-        var tuioCursor = new mmmInput.TuioCursor({
-            element: canvas,
-            config: trimeshter.config,
-            onStart: trimeshter.onStart,
-            onMove: trimeshter.onMove,
-            onEnd: trimeshter.onEnd
-        });
+        window.leapInput = new mmmInput.LeapInput(params);
+        var netCursor = new mmmInput.NetCursor(params);
+        var touchInput = new mmmInput.TouchInput(params);
+        var tuioCursor = new mmmInput.TuioCursor(params);
 
         trimeshter.config.drift.y = -0.1;
     </script>
