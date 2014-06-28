@@ -1,6 +1,7 @@
 <html>
 <head>
     <link rel="stylesheet" href="../styles/main.css" />
+    <meta name="viewport" content="width=device-width" user-scalable="no">
 </head>
 <body>
 
@@ -37,8 +38,9 @@
             onStart: trimeshter.onStart,
             onMove: trimeshter.onMove,
             onEnd: trimeshter.onEnd,
-            sendTouches: true,
-            sendMouse: false
+            sendTouches: false,
+            sendMouse: false,
+            element: canvas
         };
 
         window.leapInput = new mmmInput.LeapInput(params);
