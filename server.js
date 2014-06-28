@@ -1,4 +1,5 @@
 var express = require('express.io');
+var tuio = require("tuio");
 app = express();
 app.http().io();
 
@@ -34,4 +35,10 @@ app.listen(3456, function () {
         serverAddress = add;
         console.log('Express server listening at ' + add + ' on port ' + serverPort);
     });
+});
+
+tuio.init({
+    oscPort: 3333,
+    oscHost: "0.0.0.0",
+    socketPort: 5000
 });
