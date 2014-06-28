@@ -59,7 +59,7 @@ TouchInput.prototype.onTouchEnd = function(evt) {
         var idx = this.ongoingTouchIndexById(touches[i].identifier);
 
         if (idx >= 0) {
-            this.onFinish({x: touches[i].pageX, y: touches[i].pageY, id: touches[i].identifier});
+            this.onEnd({x: touches[i].pageX, y: touches[i].pageY, id: touches[i].identifier});
             this.ongoingTouches.splice(idx, 1);  // remove it; we're done
         } else {
             console.log("can't figure out which touch to end");
