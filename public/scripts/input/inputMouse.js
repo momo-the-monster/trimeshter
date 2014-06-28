@@ -1,18 +1,46 @@
-var el = document.getElementsByTagName("canvas")[0];
-el.addEventListener("mousedown", mouseDown, false);
-el.addEventListener("mousemove", mouseMove, false);
-el.addEventListener("mouseup", mouseUp, false);
+var mmmInput = mmmInput || {};
 
-function mouseMove(event) {
-    //   event.preventDefault();
-    onMove({x: event.clientX, y: event.clientY, id:0});
-}
+mmmInput.MouseInput = mmmInput.MouseInput || {};
 
-function mouseDown(event) {
-    //  event.preventDefault();
-    onStart({x: event.clientX, y: event.clientY, id:0});
-}
+var MouseInput = mmmInput.MouseInput = function MouseInput(options) {
+    options = options || {};
+    this.element = options.element || null;
+    this.onStart = options.onStart || null;
+    this.onMove = options.onMove || null;
+    this.onEnd = options.onEnd || null;
 
-function mouseUp(event) {
-    onFinish({x:event.clientX, y: event.clientY, id:0});
-}
+    _.bindAll(this, 'mouseDown', 'mouseMove', 'mouseUp');
+
+    // listen for touch events
+    if (this.element !== null) {
+        this.element.addEventListener("mousedown", this.mouseDown, false);
+        this.element.addEventListener("mousemove", this.mouseMove, false);
+        this.element.addEventListener("mouseup", this.mouseUp, false);
+    }
+};
+
+MouseInput.prototype.mouseMove = function(event) {
+    event.preventDefault();
+    var cursor = this.normalizePoint(event);
+    this.onMove(cursor);
+};
+
+MouseInput.prototype.mouseDown = function(event) {
+    console.log(this);
+    event.preventDefault();
+    var cursor = this.normalizePoint(event);
+    this.onStart(cursor);
+};
+
+MouseInput.prototype.mouseUp = function(event) {
+    var cursor = this.normalizePoint(event);
+    this.onEnd(cursor);
+};
+
+MouseInput.prototype.normalizePoint = function(event) {
+    return {
+        x: event.clientX / window.innerWidth,
+        y: event.clientY / window.innerHeight,
+        id: 0
+    }
+};
