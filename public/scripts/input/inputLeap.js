@@ -75,8 +75,8 @@ var LeapInput = mmmInput.LeapInput = function LeapInput(options) {
                 var scenePosition = handMesh.screenPosition(hand.fingers[i].stabilizedTipPosition, camera);
                 var event = {x: scenePosition.x, y: window.innerHeight - scenePosition.y, z:scenePosition.z, id: id};
 
-//                if (scenePosition.z > triggerMin && scenePosition.z < triggerMax) {
-                if (finger.touchZone == "touching") {
+               if (scenePosition.z > triggerMin && scenePosition.z < triggerMax) {
+//                if (finger.touchZone == "touching") {
                     if (idx >= 0) {
                         if(self.onMove !== null) {
                             self.onMove(event);
