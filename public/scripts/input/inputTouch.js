@@ -29,10 +29,9 @@ TouchInput.prototype.onTouchStart = function(evt) {
 
     for (var i = 0; i < touches.length; i++) {
         this.ongoingTouches.push(this.copyTouch(touches[i]));
-        var event = {x: touches[i].clientX, y: touches[i].clientY, id: touches[i].identifier};
-        this.onStart(event);
-        this.onMove(event);
-        this.onMove(event);
+        var cursor = this.normalizeTouch(touches[i]);
+        this.onStart(cursor);
+        this.onMove(cursor);
     }
 };
 
@@ -42,9 +41,9 @@ TouchInput.prototype.onTouchMove = function(evt) {
     for (var i = 0; i < touches.length; i++) {
         var idx = this.ongoingTouchIndexById(touches[i].identifier);
         if (idx >= 0) {
-            this.onMove({x: touches[i].clientX, y: touches[i].clientY, id: touches[i].identifier});
+            var cursor = this.normalizeTouch(touches[i]);
+            this.onMove(cursor);
             this.ongoingTouches.splice(idx, 1, this.copyTouch(touches[i]));  // swap in the new touch record
-            console.log(this.copyTouch(touches[i]));
         } else {
             console.log("can't figure out which touch to continue");
         }
@@ -59,7 +58,8 @@ TouchInput.prototype.onTouchEnd = function(evt) {
         var idx = this.ongoingTouchIndexById(touches[i].identifier);
 
         if (idx >= 0) {
-            this.onEnd({x: touches[i].clientX, y: touches[i].clientY, id: touches[i].identifier});
+            var cursor = this.normalizeTouch(touches[i]);
+            this.onEnd(cursor);
             this.ongoingTouches.splice(idx, 1);  // remove it; we're done
         } else {
             console.log("can't figure out which touch to end");
@@ -78,6 +78,14 @@ TouchInput.prototype.onTouchCancel = function(evt) {
 
 TouchInput.prototype.copyTouch = function(touch) {
     return { identifier: touch.identifier, clientX: touch.clientX, clientY: touch.clientY };
+};
+
+TouchInput.prototype.normalizeTouch = function(touch) {
+    return {
+        x: touch.clientX / window.innerWidth,
+        y: touch.clientY / window.innerHeight,
+        id: touch.identifier
+    }
 };
 
 TouchInput.prototype.ongoingTouchIndexById = function(idToFind) {
