@@ -28,18 +28,10 @@ TuioCursor.prototype.onConnect = function() {
 
 TuioCursor.prototype.cursorToTouch = function(cursor){
     var touch =  {
-        clientX: window.innerWidth * cursor.xPos,
-        clientY: window.innerHeight * cursor.yPos,
-        pageX: document.documentElement.clientWidth * cursor.xPos,
-        pageY: document.documentElement.clientHeight * cursor.yPos,
-        screenX: screen.width * cursor.xPos,
-        screenY: screen.height * cursor.yPos,
-        identifier: cursor.sessionId
+        x: cursor.xPos,
+        y: cursor.yPos,
+        id: cursor.sessionId
     };
-    touch.x = touch.clientX;
-    touch.y = touch.clientY;
-    touch.id = cursor.sessionId;
-    touch.target = document.elementFromPoint(touch.pageX, touch.pageY);
     return touch;
 };
 
