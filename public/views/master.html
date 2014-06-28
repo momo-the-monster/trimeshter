@@ -27,6 +27,7 @@
     <script type="text/javascript" src="../scripts/input/inputLeap.js"></script>
     <script type="text/javascript" src="../scripts/input/inputTouch.js"></script>
     <script type="text/javascript" src="../scripts/input/inputTuio.js"></script>
+    <script type="text/javascript" src="../scripts/input/inputMouse.js"></script>
     <script type="text/javascript">
         // Create Trimeshter Interactive Scene
         var canvas = document.getElementById('canvas');
@@ -47,6 +48,7 @@
         var netCursor = new mmmInput.NetCursor(params);
         var touchInput = new mmmInput.TouchInput(params);
         var tuioCursor = new mmmInput.TuioCursor(params);
+        var mouseCursor = new mmmInput.MouseInput(params);
 
         trimeshter.config.drift.y = -0.1;
     </script>
