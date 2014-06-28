@@ -27,8 +27,7 @@ var TuioCursor = mmmInput.TuioCursor = function TuioCursor(options) {
 };
 
 TuioCursor.prototype.onConnect = function() {
-    console.log("connected");
-    console.log(this);
+    console.log("Tuio Socket Connected");
 };
 
 TuioCursor.prototype.cursorToTouch = function(cursor){

@@ -18,12 +18,14 @@
     <script type="text/javascript" src="../scripts/vendor/tween/TweenMax.min.js"></script>
     <script type="text/javascript" src="../scripts/vendor/underscore-1.3.3.min.js"></script>
     <script type="text/javascript" src="../scripts/vendor/socket.io-0.9.10.min.js"></script>
+    <script type="text/javascript" src="../scripts/vendor/Tuio.min.js"></script>
 
     <!-- Source Includes -->
     <script type="text/javascript" src="../scripts/trimeshter.js"></script>
     <script type="text/javascript" src="../scripts/input/inputNetCursor.js"></script>
     <script type="text/javascript" src="../scripts/input/inputLeap.js"></script>
     <script type="text/javascript" src="../scripts/input/inputTouch.js"></script>
+    <script type="text/javascript" src="../scripts/input/inputTuio.js"></script>
     <script type="text/javascript">
         // Create Trimeshter Interactive Scene
         var canvas = document.getElementById('canvas');
@@ -50,6 +52,15 @@
         // Hook up Touch Input
         var touchInput = new mmmInput.TouchInput({
             element: canvas,
+            onStart: trimeshter.onStart,
+            onMove: trimeshter.onMove,
+            onEnd: trimeshter.onEnd
+        });
+
+        // Tuio Input
+        var tuioCursor = new mmmInput.TuioCursor({
+            element: canvas,
+            config: trimeshter.config,
             onStart: trimeshter.onStart,
             onMove: trimeshter.onMove,
             onEnd: trimeshter.onEnd
