@@ -11,12 +11,8 @@ var TuioCursor = mmmInput.TuioCursor = function TuioCursor(options) {
     var client = new Tuio.Client({
             host: "http://localhost:5000"
         });
-    var config = options.config || null;
 
     _.bindAll(this, 'onConnect', 'onAddTuioCursor', 'onUpdateTuioCursor', 'onRemoveTuioCursor');
-
-    // Start with no drift
-    config.drift.x = config.drift.y = config.drift.z = 0;
 
     // bind incoming tuio socket calls to handling methods
     client.on("connect", this.onConnect);
