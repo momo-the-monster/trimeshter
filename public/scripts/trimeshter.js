@@ -41,7 +41,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
         return {
             mirror: true,
             connectToSelf: false,
-            randomZ: 10,
+            randomZ: 30,
             wireframe: false,
             tween: {
                 active: true,
@@ -391,10 +391,11 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
      * @param event has x, y, id
      */
     function onMove(event) {
-
-        var x = ( event.x / canvas.width ) * 2 - 1;
-        var y = -( event.y / canvas.height ) * 2 + 1;
+     //   console.log('tri:', event.x, event.y);
+        var x = ( event.x / window.innerWidth ) * 2 - 1;
+        var y = -( event.y / window.innerHeight ) * 2 + 1;
         var z = event.z || 0;
+    //    console.log('tri:', x, y);
 
         var position = getWorldPosition(x, y);
         if (position) {
@@ -498,8 +499,8 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
      */
     function onEnd(event) {
 
-        var x = ( event.x / canvas.width ) * 2 - 1;
-        var y = -( event.y / canvas.height ) * 2 + 1;
+        var x = ( event.x / window.innerWidth ) * 2 - 1;
+        var y = -( event.y / window.innerHeight ) * 2 + 1;
         var z = event.z || getRandomArbitrary(config.randomZ, -config.randomZ);
         var self = this;    // store this for use in Tween functions below
 
