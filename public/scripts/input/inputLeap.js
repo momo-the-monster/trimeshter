@@ -22,7 +22,7 @@ var LeapInput = mmmInput.LeapInput = function LeapInput(options) {
     scene = three.scene;
     renderer = three.renderer;
     var triggerRange = 0.001;
-    var triggerSpot = 0.973
+    var triggerSpot = 0.973;
     var triggerMin = triggerSpot - triggerRange;
     var triggerMax = triggerSpot + triggerRange;
 
@@ -36,14 +36,14 @@ var LeapInput = mmmInput.LeapInput = function LeapInput(options) {
             renderFn: function () {
             },
             scale: 2,
-            offset: new THREE.Vector3(0, -30, 10),
+            offset: new THREE.Vector3(0, -20, 10),
             camera: camera,
             positionScale: 2
         })
         .connect();
     // rigged hand styling
     controller.on('riggedHand.meshAdded', function (handMesh, leapHand) {
-        handMesh.material.opacity = 0.9;
+        handMesh.material.opacity = 0.7;
     });
 
     /**
@@ -75,8 +75,8 @@ var LeapInput = mmmInput.LeapInput = function LeapInput(options) {
                 var scenePosition = handMesh.screenPosition(hand.fingers[i].stabilizedTipPosition, camera);
                 var event = {x: scenePosition.x, y: window.innerHeight - scenePosition.y, z:scenePosition.z, id: id};
 
-//                if (scenePosition.z > triggerMin && scenePosition.z < triggerMax) {
-                if (finger.touchZone == "touching") {
+               if (scenePosition.z > triggerMin && scenePosition.z < triggerMax) {
+//                if (finger.touchZone == "touching") {
                     if (idx >= 0) {
                         if(self.onMove !== null) {
                             self.onMove(event);

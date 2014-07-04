@@ -1,6 +1,7 @@
 <html>
 <head>
     <link rel="stylesheet" href="../styles/main.css" />
+    <meta name="viewport" content="width=device-width" user-scalable="no">
 </head>
 <body>
 
@@ -18,42 +19,36 @@
     <script type="text/javascript" src="../scripts/vendor/tween/TweenMax.min.js"></script>
     <script type="text/javascript" src="../scripts/vendor/underscore-1.3.3.min.js"></script>
     <script type="text/javascript" src="../scripts/vendor/socket.io-0.9.10.min.js"></script>
+    <script type="text/javascript" src="../scripts/vendor/Tuio.min.js"></script>
 
     <!-- Source Includes -->
     <script type="text/javascript" src="../scripts/trimeshter.js"></script>
     <script type="text/javascript" src="../scripts/input/inputNetCursor.js"></script>
     <script type="text/javascript" src="../scripts/input/inputLeap.js"></script>
     <script type="text/javascript" src="../scripts/input/inputTouch.js"></script>
+    <script type="text/javascript" src="../scripts/input/inputTuio.js"></script>
     <script type="text/javascript">
         // Create Trimeshter Interactive Scene
         var canvas = document.getElementById('canvas');
         var trimeshter = new mmm.Trimeshter(canvas);
 
-        // Hook up Leap Input
-        window.leapInput = new mmmInput.LeapInput({
+        // create params object with all required config settings for inputs
+        var params = {
             three: trimeshter.three,
             onStart: trimeshter.onStart,
             onMove: trimeshter.onMove,
-            onEnd: trimeshter.onEnd
-        });
-
-        // Hook up Socket Input
-        var netCursor = new mmmInput.NetCursor({
-            element: canvas,
-            onStart: trimeshter.onStart,
-            onMove: trimeshter.onMove,
             onEnd: trimeshter.onEnd,
-            sendTouches: true,
-            sendMouse: false
-        });
+            sendTouches: false,
+            sendMouse: false,
+            element: canvas
+        };
 
-        // Hook up Touch Input
-        var touchInput = new mmmInput.TouchInput({
-            element: canvas,
-            onStart: trimeshter.onStart,
-            onMove: trimeshter.onMove,
-            onEnd: trimeshter.onEnd
-        });
+        window.leapInput = new mmmInput.LeapInput(params);
+        var netCursor = new mmmInput.NetCursor(params);
+        var touchInput = new mmmInput.TouchInput(params);
+        var tuioCursor = new mmmInput.TuioCursor(params);
+
+        trimeshter.config.drift.y = -0.1;
     </script>
 </body>
 </html>
