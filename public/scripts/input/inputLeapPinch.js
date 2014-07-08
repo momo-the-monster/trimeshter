@@ -21,10 +21,6 @@ var LeapInput = mmmInput.LeapInput = function LeapInput(options) {
     camera = three.camera;
     scene = three.scene;
     renderer = three.renderer;
-    var triggerRange = 0.001;
-    var triggerSpot = 0.973;
-    var triggerMin = triggerSpot - triggerRange;
-    var triggerMax = triggerSpot + triggerRange;
 
     /**
      * Initialize Leap Controller and rigged hand
@@ -35,15 +31,18 @@ var LeapInput = mmmInput.LeapInput = function LeapInput(options) {
             renderer: renderer,
             renderFn: function () {
             },
-            scale: 2,
-            offset: new THREE.Vector3(0, -20, 10),
+            scale: 5,
+            positionScale: 5,
+            offset: new THREE.Vector3(0, -50, -20),
             camera: camera,
-            positionScale: 2
+            materialOptions: {
+                wireframe: true
+            }
         })
         .connect();
     // rigged hand styling
     controller.on('riggedHand.meshAdded', function (handMesh, leapHand) {
-        handMesh.material.opacity = 0.7;
+        handMesh.material.opacity = 0.25;
     });
 
     /**
@@ -59,50 +58,63 @@ var LeapInput = mmmInput.LeapInput = function LeapInput(options) {
         for (var h = 0; h < frame.hands.length; h++) {
 
             var hand = frame.hands[h];
-            var handMesh = frame.hands[h].data('riggedHand.mesh');
 
-            // loop through every finger
-            for (var i = 0; i < hand.fingers.length; i++) {
+            var idx = self.isLeapPressed(hand.id);
+            var pinchStrength = hand.pinchStrength;
+            var pincher = self.findPinchingFingerType(hand);
+            var ibox = frame.interactionBox;
+            var normalizedPosition = ibox.normalizePoint(pincher.stabilizedTipPosition, true);
 
-                var finger = hand.fingers[i];
-                var id = finger.id;
-
-                // find existing leap touch to detect Start, Move and End
-                // ongoing touch logic based on https://developer.mozilla.org/en-US/docs/Web/Guide/Events/Touch_events
-                var idx = self.isLeapPressed(id);
-
-                // get scene position
-                var scenePosition = handMesh.screenPosition(hand.fingers[i].stabilizedTipPosition, camera);
-                var event = {x: scenePosition.x, y: window.innerHeight - scenePosition.y, z:scenePosition.z, id: id};
-                var cursor = self.normalizePoint(event);
-//                if (scenePosition.z > triggerMin && scenePosition.z < triggerMax) {
-                if (finger.touchZone == "touching") {
-
-                    if (idx >= 0) {
-                        if(self.onMove !== null) {
-                            self.onMove(cursor);
-                        }
-                        self.leapTouches.splice(idx, 1, event);
-                    } else {
-                        if(self.onStart !== null) {
-                            self.onStart(cursor);
-                        }
-                        self.leapTouches.push(event);
+            var cursor = {
+                id:hand.id,
+                x: normalizedPosition[0],
+                y: 1 - normalizedPosition[1],
+                z: normalizedPosition[2]
+            };
+            if(pinchStrength === 1){
+                if(idx >=0){
+                    if(self.onMove !== null) {
+                        self.onMove(cursor);
                     }
+                    self.leapTouches.splice(idx, 1, cursor);
                 } else {
-                    // test that a touch exists before we try to finish it
-                    if (idx >= 0) {
-                        if(self.onEnd !== null) {
-                            self.onEnd(cursor);
-                        }
-                        self.leapTouches.splice(idx, 1);
+                    if(self.onStart !== null) {
+                        self.onStart(cursor);
                     }
+                    self.leapTouches.push(cursor);
                 }
-
-            } // end of finger loop
-
+            } else {
+                if (idx >= 0) {
+                    if(self.onEnd !== null) {
+                        self.onEnd(cursor);
+                    }
+                    self.leapTouches.splice(idx, 1);
+                }
+            }
         } // end of hand loop
     });
+};
+
+/**
+ * Get pinching finger
+ * From official docs at https://developer.leapmotion.com/documentation/skeletal/javascript/api/Leap.Hand.html
+ * @param hand
+ * @returns {*}
+ */
+LeapInput.prototype.findPinchingFingerType = function(hand){
+    var pincher;
+    var closest = 500;
+    for(var f = 1; f < 5; f++)
+    {
+        current = hand.fingers[f];
+        distance = Leap.vec3.distance(hand.thumb.tipPosition, current.tipPosition);
+        if(current != hand.thumb && distance < closest)
+        {
+            closest = distance;
+            pincher = current;
+        }
+    }
+    return pincher;
 };
 
 /**

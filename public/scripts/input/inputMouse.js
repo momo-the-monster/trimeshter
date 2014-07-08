@@ -26,7 +26,6 @@ MouseInput.prototype.mouseMove = function(event) {
 };
 
 MouseInput.prototype.mouseDown = function(event) {
-    console.log(this);
     event.preventDefault();
     var cursor = this.normalizePoint(event);
     this.onStart(cursor);
