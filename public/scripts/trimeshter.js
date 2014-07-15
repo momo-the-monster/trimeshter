@@ -17,6 +17,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
     var canvas = canvas;
     var gui = {};
     var starfield = {};
+    var allPoints = [];
 
     // Trimeshter is self-initializing!
     init();
@@ -327,6 +328,8 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
      */
     function animate(time) {
 
+        updatePointCache();
+
         if (config.drift.x != 0 || config.drift.y != 0 || config.drift.z != 0) {
             for (var i = 0; i < allMeshes.length; i++) {
                 var mesh = allMeshes[i];
@@ -421,20 +424,10 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
                         vertex.x = position.x;
                     }
 
+                    vertex.y = position.y;
+                    vertex.z = z;
+
                     var sortedPoints = [];
-                    var allPoints = [];
-
-                    // construct allPoints from allMeshes
-                    allMeshes.forEach(function (mesh) {
-                        mesh.geometry.vertices.forEach(function (vertex) {
-                            allPoints.push(vertex);
-                        });
-                    });
-
-                    // clear dupes
-                    allPoints = allPoints.filter(function (item, index, inputArray) {
-                        return inputArray.indexOf(item) == index;
-                    });
 
                     allPoints.forEach(function (point) {
                         sortedPoints.push({ x: point.x, y: point.y, d: point.distanceTo(vertex)});
@@ -453,9 +446,6 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
                     }
 
                     sortByKey(sortedPoints, "d");
-
-                    vertex.y = position.y;
-                    vertex.z = z;
 
                     vertex = mesh.geometry.vertices[0];
                     var targetPoint = sortedPoints[0] || new THREE.Vector2(0, 0);
@@ -529,6 +519,26 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
             // kill selection meshes once the piece has been grown
             removeSelectionMeshes(event.id);
         }
+    }
+
+    /**
+     * Update cache of all points
+     */
+    function updatePointCache(){
+        allPoints = [];
+
+        // construct allPoints from allMeshes
+        allMeshes.forEach(function (mesh) {
+            mesh.geometry.vertices.forEach(function (vertex) {
+                allPoints.push(vertex);
+            });
+        });
+
+        // clear dupes
+        allPoints = allPoints.filter(function (item, index, inputArray) {
+            return inputArray.indexOf(item) == index;
+        });
+
     }
 
     /**
