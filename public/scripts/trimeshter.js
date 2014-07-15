@@ -415,8 +415,8 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
      * @param event has x, y, id
      */
     function onMove(event) {
-        var x = event.x * 0.75 - 0.5;
-        var y = - event.y * 0.75 + 0.5;
+        var x = event.x * 2 - 1;
+        var y = - event.y * 2 + 1;
         var z = event.z || 0;
 
         var position = getWorldPosition(x, y);
