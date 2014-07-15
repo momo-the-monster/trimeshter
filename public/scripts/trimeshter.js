@@ -70,6 +70,10 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
     function initGui() {
         var gui = new dat.GUI();
 
+        gui.remember(config);
+        gui.remember(config.drift);
+        gui.remember(config.tween);
+
         var guiBuild = gui.addFolder("Building");
         guiBuild.add(config, 'mirror');
         guiBuild.add(config, 'connectToSelf');
@@ -90,11 +94,6 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
         guiDrift.add(config.drift, 'y', -1, 1);
         guiDrift.add(config.drift, 'z', -3, 0.1);
         guiDrift.open();
-
-//        Why isn't remember working?
-//        gui.remember(config);
-//        gui.remember(config.drift);
-//        gui.remember(config.tween);
 
         return gui;
     }
@@ -391,8 +390,8 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
      * @param event has x, y, id
      */
     function onMove(event) {
-        var x = event.x * 2 - 1;
-        var y = - event.y * 2 + 1;
+        var x = event.x * 0.75 - 0.5;
+        var y = - event.y * 0.75 + 0.5;
         var z = event.z || 0;
 
         var position = getWorldPosition(x, y);
