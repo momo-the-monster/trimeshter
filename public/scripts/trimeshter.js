@@ -346,7 +346,8 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
             framesSinceRebuild = 0;
         }
 
-        if (config.drift.x != 0 || config.drift.y != 0 || config.drift.z != 0) {
+      //  if (config.drift.x != 0 || config.drift.y != 0 || config.drift.z != 0) {
+        if(true){
             for (var i = 0; i < allMeshes.length; i++) {
                 var mesh = allMeshes[i];
                 for (var v = 0; v < mesh.geometry.vertices.length; v++) {
@@ -354,6 +355,8 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
                     vertex.x += config.drift.x;
                     vertex.y += config.drift.y;
                     vertex.z += config.drift.z;
+
+                    vertex.applyAxisAngle(new THREE.Vector3(1,1,0), 0.001);
                 }
                 mesh.geometry.verticesNeedUpdate = true;
             }
