@@ -18,6 +18,9 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
     var gui = {};
     var starfield = {};
     var allPoints = [];
+    var octree;
+    var framesSinceRebuild = 0;
+    var waitUntilRebuild = 10;
 
     // Trimeshter is self-initializing!
     init();
@@ -32,6 +35,15 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
         initMaterials();
         initStarfield();
         animate();
+
+        octree = new THREE.Octree({
+            radius: 1, // optional, default = 1, octree will grow and shrink as needed
+            undeferred: false, // optional, default = false, octree will defer insertion until you call octree.update();
+            depthMax: Infinity, // optional, default = Infinity, infinite depth
+            objectsThreshold: 8, // optional, default = 8
+            overlapPct: 0.15, // optional, default = 0.15 (15%), this helps sort objects that overlap nodes
+     //       scene: scene // optional, pass scene as parameter only if you wish to visualize octree
+        } );
     }
 
     /**
@@ -328,7 +340,11 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
      */
     function animate(time) {
 
-        updatePointCache();
+        framesSinceRebuild++;
+        if(octree && framesSinceRebuild >= waitUntilRebuild){
+            octree.rebuild();
+            framesSinceRebuild = 0;
+        }
 
         if (config.drift.x != 0 || config.drift.y != 0 || config.drift.z != 0) {
             for (var i = 0; i < allMeshes.length; i++) {
@@ -374,6 +390,9 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
         }
 
         renderer.render(scene, camera);
+        if(octree){
+            octree.update();
+        }
         requestAnimationFrame(animate);
     }
 
@@ -428,9 +447,11 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
                     vertex.z = z;
 
                     var sortedPoints = [];
+                    var nearestPoints = octree.search(vertex,10,false);
 
-                    allPoints.forEach(function (point) {
-                        sortedPoints.push({ x: point.x, y: point.y, d: point.distanceTo(vertex)});
+                    nearestPoints.forEach(function (object) {
+                        var point = object.vertices;
+                        sortedPoints.push({ x: point.x, y: point.y, z:point.z, d: point.distanceTo(vertex)});
                     });
 
                     // search through selection meshes, too
@@ -439,7 +460,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
                             if (mesh.touchid != event.id) {
                                 for (var i = 0; i < 3; i++) {
                                     var point = mesh.geometry.vertices[i];
-                                    sortedPoints.push({x: point.x, y: point.y, d: point.distanceTo(vertex)});
+                                    sortedPoints.push({x: point.x, y: point.y, z:point.z, d: point.distanceTo(vertex)});
                                 }
                             }
                         });
@@ -447,10 +468,12 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
 
                     sortByKey(sortedPoints, "d");
 
+                    var targetPoint = sortedPoints[0] || new THREE.Vector3(0,0,0);
                     vertex = mesh.geometry.vertices[0];
-                    var targetPoint = sortedPoints[0] || new THREE.Vector2(0, 0);
+
                     vertex.x = targetPoint.x;
                     vertex.y = targetPoint.y;
+                    vertex.z = targetPoint.z;
 
                     // Make sure picked points have some space between them
                     var secondPointIndex = 1;
@@ -458,7 +481,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
                     while (tooSmall) {
                         var secondPoint = sortedPoints[ secondPointIndex ];
                         if (secondPoint) {
-                            var innerDistance = new THREE.Vector2(secondPoint.x, secondPoint.y).distanceTo(sortedPoints[0]);
+                            var innerDistance = new THREE.Vector3(secondPoint.x, secondPoint.y, secondPoint.z).distanceTo(sortedPoints[0]);
                             tooSmall = ( innerDistance < 2 );
                             secondPointIndex++;
                         } else {
@@ -468,9 +491,10 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
                     }
 
                     var targetVertex = mesh.geometry.vertices[1];
-                    targetPoint = sortedPoints[ secondPointIndex ] || new THREE.Vector2(0, 0);
+                    targetPoint = sortedPoints[ secondPointIndex ] || new THREE.Vector3(0, 0, 0);
                     targetVertex.x = targetPoint.x;
                     targetVertex.y = targetPoint.y;
+                    targetVertex.z = targetPoint.z;
 
                 }
             }
@@ -551,6 +575,8 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
         allMeshes.push(mesh);
         scene.add(mesh);
 
+        octree.add( mesh, { useVertices: true } );
+
         if (config.tween.active) {
 
             // initial growth tween
@@ -599,6 +625,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
         if (idx > -1) {
             allMeshes.splice(idx, 1);
         }
+        octree.remove( tween.target );
         scene.remove(tween.target);
     }
 
