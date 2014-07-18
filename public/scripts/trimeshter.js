@@ -389,7 +389,17 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
         }
 
         for (var i = selectionMeshes.length - 1; i >= 0; i--) {
-            selectionMeshes[i].geometry.verticesNeedUpdate = true;
+            var mesh = selectionMeshes[i];
+
+            for (var v = 0; v < mesh.geometry.vertices.length - 1; v++) {
+                var vertex = mesh.geometry.vertices[v];
+                vertex.x += config.drift.x;
+                vertex.y += config.drift.y;
+                vertex.z += config.drift.z;
+
+                vertex.applyAxisAngle(new THREE.Vector3(1, 1, 0), 0.001);
+            }
+            mesh.geometry.verticesNeedUpdate = true;
         }
 
         renderer.render(scene, camera);
