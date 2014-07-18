@@ -66,6 +66,11 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
                 y: -0.1,
                 z: 0.0
             },
+            rDrift: {
+               x: 0.0,
+               y: 0.0,
+               z: 0.0
+            },
             starfield: {
                 bounds: {
                     x: 220,
@@ -107,6 +112,12 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
         guiDrift.add(config.drift, 'y', -1, 1);
         guiDrift.add(config.drift, 'z', -3, 0.1);
         guiDrift.open();
+
+        var guiRDrift = gui.addFolder("Rotate");
+        guiRDrift.add(config.rDrift, 'x', -1, 1);
+        guiRDrift.add(config.rDrift, 'y', -1, 1);
+        guiRDrift.add(config.rDrift, 'z', -3, 0.1);
+        guiRDrift.open();
 
         return gui;
     }
@@ -356,7 +367,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
                     vertex.y += config.drift.y;
                     vertex.z += config.drift.z;
 
-                    vertex.applyAxisAngle(new THREE.Vector3(1,1,0), 0.001);
+                    vertex.applyAxisAngle(new THREE.Vector3(config.rDrift.x, config.rDrift.y, config.rDrift.z), 0.01);
                 }
                 mesh.geometry.verticesNeedUpdate = true;
             }
@@ -397,7 +408,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
                 vertex.y += config.drift.y;
                 vertex.z += config.drift.z;
 
-                vertex.applyAxisAngle(new THREE.Vector3(1, 1, 0), 0.001);
+                vertex.applyAxisAngle(new THREE.Vector3(config.rDrift.x, config.rDrift.y, config.rDrift.z), 0.01);
             }
             mesh.geometry.verticesNeedUpdate = true;
         }
