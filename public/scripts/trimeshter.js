@@ -20,7 +20,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
     var allPoints = [];
     var octree;
     var framesSinceRebuild = 0;
-    var waitUntilRebuild = 10;
+    var waitUntilRebuild = 30;
     // Background Scene
     var backgroundScene, backgroundCamera;
 
@@ -56,7 +56,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
         return {
             mirror: true,
             connectToSelf: false,
-            randomZ: 30,
+            randomZ: 0,
             wireframe: false,
             tween: {
                 active: true,
@@ -478,12 +478,27 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
 
                     // set third vertex to cursor position
                     var vertex = mesh.geometry.vertices[2];
-                    var isEven = (i % 2 == 0);
+                    var isEven = ((i+1) % 2 == 0);
 
-                    if (isEven && config.mirror) {
+                    if (i > 0 && isEven && config.mirror) {
+                        var parentMesh = selectionMeshes[i-1];
+                        var parentVertex = parentMesh.geometry.vertices[2];
+
+                        mesh.geometry.vertices[0].x = parentMesh.geometry.vertices[0].x;
+                        mesh.geometry.vertices[0].y = parentMesh.geometry.vertices[0].y;
+                        mesh.geometry.vertices[0].z = parentMesh.geometry.vertices[0].z;
+                        mesh.geometry.vertices[1].x = parentMesh.geometry.vertices[1].x;
+                        mesh.geometry.vertices[1].y = parentMesh.geometry.vertices[1].y;
+                        mesh.geometry.vertices[1].z = parentMesh.geometry.vertices[1].z;
+                        mesh.geometry.vertices[2].x = parentMesh.geometry.vertices[2].x;
+                        mesh.geometry.vertices[2].y = parentMesh.geometry.vertices[2].y;
+                        mesh.geometry.vertices[2].z = parentMesh.geometry.vertices[2].z;
+
                         var middle = window.innerWidth / 2;
-                        var isRightSide = (position.x > 0);
-                        var offset = Math.abs(position.x);
+                        var isRightSide = (vertex.x > 0);
+
+                        var offset = Math.abs(vertex.x);
+
                         if (isRightSide) {
                             // Flip to Left Side
                             vertex.x = -offset;
@@ -499,7 +514,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
                     vertex.z = z;
 
                     var sortedPoints = [];
-                    var nearestPoints = octree.search(vertex,10,false);
+                    var nearestPoints = octree.search(vertex,1,false);
 
                     nearestPoints.forEach(function (object) {
                         var point = object.vertices;
