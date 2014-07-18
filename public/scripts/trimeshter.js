@@ -21,6 +21,8 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
     var octree;
     var framesSinceRebuild = 0;
     var waitUntilRebuild = 10;
+    // Background Scene
+    var backgroundScene, backgroundCamera;
 
     // Trimeshter is self-initializing!
     init();
@@ -146,6 +148,28 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
         // Set Default objects
         geoTri = buildMasterObject();
         materialSelection = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: false, side: THREE.DoubleSide });
+
+        initThreeBG();
+    }
+
+    function initThreeBG() {
+        // Load the background texture
+        var texture = THREE.ImageUtils.loadTexture('images/mountainproject.jpg');
+        var backgroundMesh = new THREE.Mesh(
+            new THREE.PlaneGeometry(2, 2, 0),
+            new THREE.MeshBasicMaterial({
+                map: texture
+            }));
+
+        backgroundMesh.material.depthTest = false;
+        backgroundMesh.material.depthWrite = false;
+
+        // Create your background scene
+        backgroundScene = new THREE.Scene();
+        backgroundCamera = new THREE.Camera();
+        backgroundScene.add(backgroundCamera);
+        backgroundScene.add(backgroundMesh);
+
     }
 
     /**
@@ -413,7 +437,11 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
             mesh.geometry.verticesNeedUpdate = true;
         }
 
+        renderer.autoClear = false;
+        renderer.clear();
+        renderer.render(backgroundScene, backgroundCamera);
         renderer.render(scene, camera);
+
         if(octree){
             octree.update();
         }
