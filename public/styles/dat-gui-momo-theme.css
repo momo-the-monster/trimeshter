@@ -1,0 +1,91 @@
+.dg.ac{
+}
+
+.guidat-controllers {
+    height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.dg.main.taller-than-window .close-button {
+    border-top: 1px solid #ddd;
+}
+
+.dg.main .close-button {
+    transition: 0.25s linear background-color;
+    background-color: rgba(0, 0, 0, 0.25);
+}
+
+.dg.main .close-button:hover {
+    background-color: rgba(0, 0, 0, 1);
+}
+
+.dg {
+    color: #c7c7c7;
+    text-shadow: none !important;
+}
+
+.dg.main::-webkit-scrollbar {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.dg.main::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.dg li {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.dg li:not(.folder) {
+    background: rgba(0, 0, 0, 0.25);
+    border-bottom: 1px solid #333;
+}
+
+.dg li.title {
+    color: #D798FF;
+}
+
+.dg li.save-row .button {
+    text-shadow: none !important;
+    background: #383838;
+}
+
+.dg li.title {
+    background: rgba(0,0,0,0.25) url(data:image/gif;base64,R0lGODlhBQAFAJEAAP////Pz8////////yH5BAEAAAIALAAAAAAFAAUAAAIIlI+hKgFxoCgAOw==) 6px 10px no-repeat;
+}
+
+.dg .cr.function:hover, .dg .cr.boolean:hover {
+    background: #f0f0f0;
+}
+
+.dg .c input[type=text] {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.dg .c input[type=text]:hover {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.dg .c input[type=text]:focus {
+    background: rgba(0, 0, 0, 0.25);
+    color: #555;
+}
+
+.dg .c .slider {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.dg .c .slider:hover {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.dg .c .slider-fg {
+    background: rgba(255, 255, 255, 0.3);
+    border: 1px solid #D798FF;
+}
+
+.dg .c .slider:hover .slider-fg {
+    background: transparent;
+}
