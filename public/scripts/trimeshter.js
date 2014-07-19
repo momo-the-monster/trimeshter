@@ -467,20 +467,22 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
         var x = event.x * 2 - 1;
         var y = - event.y * 2 + 1;
         var z = event.z || 0;
+        var doSearch = true;
 
         var position = getWorldPosition(x, y);
         if (position) {
-            for (var i = selectionMeshes.length - 1; i >= 0; i--) {
+            for (var i = 0; i < selectionMeshes.length; i++) {
 
                 var mesh = selectionMeshes[i];
 
                 if (mesh.touchid == event.id) {
 
                     // set third vertex to cursor position
-                    var vertex = mesh.geometry.vertices[2];
                     var isEven = ((i+1) % 2 == 0);
 
                     if (i > 0 && isEven && config.mirror) {
+                        doSearch = false;
+
                         var parentMesh = selectionMeshes[i-1];
                         var parentVertex = parentMesh.geometry.vertices[2];
 
@@ -494,11 +496,16 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
                         mesh.geometry.vertices[2].y = parentMesh.geometry.vertices[2].y;
                         mesh.geometry.vertices[2].z = parentMesh.geometry.vertices[2].z;
 
+
+                        var vertex = mesh.geometry.vertices[2];
+
                         var middle = window.innerWidth / 2;
                         var isRightSide = (vertex.x > 0);
 
                         var offset = Math.abs(vertex.x);
-
+                       // offset = 10;
+                        vertex.x *= -1;
+/*
                         if (isRightSide) {
                             // Flip to Left Side
                             vertex.x = -offset;
@@ -506,64 +513,73 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
                             // Flip to Right Side
                             vertex.x = offset;
                         }
+                        */
                     } else {
+                        var vertex = mesh.geometry.vertices[2];
                         vertex.x = position.x;
                     }
 
-                    vertex.y = position.y;
-                    vertex.z = z;
+                    if(doSearch){
+                        var vertex = mesh.geometry.vertices[2];
+                        vertex.y = position.y;
+                        vertex.z = z;
 
-                    var sortedPoints = [];
-                    var nearestPoints = octree.search(vertex,1,false);
+                        var sortedPoints = [];
+                        var nearestPoints = octree.search(vertex,10,false);
 
-                    nearestPoints.forEach(function (object) {
-                        var point = object.vertices;
-                        sortedPoints.push({ x: point.x, y: point.y, z:point.z, d: point.distanceTo(vertex)});
-                    });
-
-                    // search through selection meshes, too
-                    if (config.connectToSelf) {
-                        selectionMeshes.forEach(function (mesh) {
-                            if (mesh.touchid != event.id) {
-                                for (var i = 0; i < 3; i++) {
-                                    var point = mesh.geometry.vertices[i];
-                                    sortedPoints.push({x: point.x, y: point.y, z:point.z, d: point.distanceTo(vertex)});
-                                }
-                            }
+                        nearestPoints.forEach(function (object) {
+                            var point = object.vertices;
+                            sortedPoints.push({ x: point.x, y: point.y, z:point.z, d: point.distanceTo(vertex)});
                         });
-                    }
 
-                    sortByKey(sortedPoints, "d");
+                        // search through selection meshes, too
 
-                    var targetPoint = sortedPoints[0] || new THREE.Vector3(0,0,0);
-                    vertex = mesh.geometry.vertices[0];
-
-                    vertex.x = targetPoint.x;
-                    vertex.y = targetPoint.y;
-                    vertex.z = targetPoint.z;
-
-                    // Make sure picked points have some space between them
-                    var secondPointIndex = 1;
-                    var tooSmall = true;
-                    while (tooSmall) {
-                        var secondPoint = sortedPoints[ secondPointIndex ];
-                        if (secondPoint) {
-                            var innerDistance = new THREE.Vector3(secondPoint.x, secondPoint.y, secondPoint.z).distanceTo(sortedPoints[0]);
-                            tooSmall = ( innerDistance < 2 );
-                            secondPointIndex++;
-                        } else {
-                            secondPointIndex = 0;
-                            tooSmall = false;
+                        if (config.connectToSelf) {
+                            selectionMeshes.forEach(function (mesh) {
+                                if (mesh.touchid != event.id) {
+                                    for (var i = 0; i < 3; i++) {
+                                        var point = mesh.geometry.vertices[i];
+                                        sortedPoints.push({x: point.x, y: point.y, z:point.z, d: point.distanceTo(vertex)});
+                                    }
+                                }
+                            });
                         }
-                    }
 
-                    var targetVertex = mesh.geometry.vertices[1];
-                    targetPoint = sortedPoints[ secondPointIndex ] || new THREE.Vector3(0, 0, 0);
-                    targetVertex.x = targetPoint.x;
-                    targetVertex.y = targetPoint.y;
-                    targetVertex.z = targetPoint.z;
+
+                        sortByKey(sortedPoints, "d");
+
+                        var targetPoint = sortedPoints[0] || new THREE.Vector3(0,0,0);
+                        var vertex = mesh.geometry.vertices[0];
+
+                        vertex.x = targetPoint.x;
+                        vertex.y = targetPoint.y;
+                        vertex.z = targetPoint.z;
+
+                        // Make sure picked points have some space between them
+                        var secondPointIndex = 1;
+                        var tooSmall = true;
+                        while (tooSmall) {
+                            var secondPoint = sortedPoints[ secondPointIndex ];
+                            if (secondPoint) {
+                                var innerDistance = new THREE.Vector3(secondPoint.x, secondPoint.y, secondPoint.z).distanceTo(sortedPoints[0]);
+                                tooSmall = ( innerDistance < 2 );
+                                secondPointIndex++;
+                            } else {
+                                secondPointIndex = 0;
+                                tooSmall = false;
+                            }
+                        }
+
+                        var targetVertex = mesh.geometry.vertices[1];
+                        targetPoint = sortedPoints[ secondPointIndex ] || new THREE.Vector3(0, 0, 0);
+                        targetVertex.x = targetPoint.x;
+                        targetVertex.y = targetPoint.y;
+                        targetVertex.z = targetPoint.z;
+
+                    }
 
                 }
+
             }
         }
 
