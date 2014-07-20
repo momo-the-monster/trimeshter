@@ -9,7 +9,6 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
     var wall = {};                 // Touch points intersect the wall to find scene positions
     var allMeshes = [];            // Generated mesh items stored here
     var selectionMeshes = [];      // In-progress selection meshes
-    var selectionMeshesM = [];      // Mirrored selection meshes
     var geoTri = {};               // Master object used to create new meshes
     var materialSelection = {};    // Material applied to selection meshes
     var materials = [];            // Currently selected material array
@@ -343,22 +342,16 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
     function addSelectionMeshes(touchid) {
         var numSelectionsToMake = config.mirror ? 2 : 1;
         // Create and Add all selection meshes
-
-        //        var material = getRandomMaterial();
-        //        var material = materialsSolid[3];
-        var material = materialSelection;
-        var mesh = new THREE.Mesh(geoTri.clone(), material.clone());
-        mesh.geometry.dynamic = true;
-        mesh.touchid = touchid;
-        selectionMeshes.push(mesh);
-        scene.add(mesh);
-
-        if(config.mirror){
-            var meshClone = mesh.clone();
-            selectionMeshesM.push(meshClone);
-            scene.add(meshClone);
+        for (var i = 0; i < numSelectionsToMake; i++) {
+            //        var material = getRandomMaterial();
+            //        var material = materialsSolid[3];
+            var material = materialSelection;
+            var mesh = new THREE.Mesh(geoTri.clone(), material.clone());
+            mesh.geometry.dynamic = true;
+            mesh.touchid = touchid;
+            selectionMeshes.push(mesh);
+            scene.add(mesh);
         }
-
     }
 
     /**
@@ -370,12 +363,6 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
         for (var i = selectionMeshes.length - 1; i >= 0; i--) {
             if (selectionMeshes[i].touchid == touchid) {
                 var mesh = selectionMeshes.splice(i, 1)[0];
-                scene.remove(mesh);
-            }
-        }
-        for (var i = selectionMeshesM.length - 1; i >= 0; i--) {
-            if (selectionMeshesM[i].touchid == touchid) {
-                var mesh = selectionMeshesM.splice(i, 1)[0];
                 scene.remove(mesh);
             }
         }
@@ -450,20 +437,6 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
             mesh.geometry.verticesNeedUpdate = true;
         }
 
-        for (var i = selectionMeshesM.length - 1; i >= 0; i--) {
-            var mesh = selectionMeshesM[i];
-
-            for (var v = 0; v < mesh.geometry.vertices.length - 1; v++) {
-                var vertex = mesh.geometry.vertices[v];
-                vertex.x += config.drift.x;
-                vertex.y += config.drift.y;
-                vertex.z += config.drift.z;
-
-                vertex.applyAxisAngle(new THREE.Vector3(config.rDrift.x, config.rDrift.y, config.rDrift.z), 0.01);
-            }
-            mesh.geometry.verticesNeedUpdate = true;
-        }
-
         renderer.autoClear = false;
         renderer.clear();
         renderer.render(backgroundScene, backgroundCamera);
@@ -504,80 +477,107 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
 
                 if (mesh.touchid == event.id) {
 
-                    var vertex = mesh.geometry.vertices[2];
-                    vertex.x = position.x;
-                    vertex.y = position.y;
-                    vertex.z = z;
+                    // set third vertex to cursor position
+                    var isEven = ((i+1) % 2 == 0);
 
-                    var sortedPoints = [];
-                    var nearestPoints = octree.search(vertex,10,false);
+                    if (i > 0 && isEven && config.mirror) {
+                        doSearch = false;
 
-                    nearestPoints.forEach(function (object) {
-                        var point = object.vertices;
-                        sortedPoints.push({ x: point.x, y: point.y, z:point.z, d: point.distanceTo(vertex)});
-                    });
+                        var parentMesh = selectionMeshes[i-1];
+                        var parentVertex = parentMesh.geometry.vertices[2];
 
-                    // search through selection meshes, too
+                        mesh.geometry.vertices[0].x = parentMesh.geometry.vertices[0].x;
+                        mesh.geometry.vertices[0].y = parentMesh.geometry.vertices[0].y;
+                        mesh.geometry.vertices[0].z = parentMesh.geometry.vertices[0].z;
+                        mesh.geometry.vertices[1].x = parentMesh.geometry.vertices[1].x;
+                        mesh.geometry.vertices[1].y = parentMesh.geometry.vertices[1].y;
+                        mesh.geometry.vertices[1].z = parentMesh.geometry.vertices[1].z;
+                        mesh.geometry.vertices[2].x = parentMesh.geometry.vertices[2].x;
+                        mesh.geometry.vertices[2].y = parentMesh.geometry.vertices[2].y;
+                        mesh.geometry.vertices[2].z = parentMesh.geometry.vertices[2].z;
 
-                    if (config.connectToSelf) {
-                        selectionMeshes.forEach(function (mesh) {
-                            if (mesh.touchid != event.id) {
-                                for (var i = 0; i < 3; i++) {
-                                    var point = mesh.geometry.vertices[i];
-                                    sortedPoints.push({x: point.x, y: point.y, z:point.z, d: point.distanceTo(vertex)});
-                                }
-                            }
-                        });
-                    }
-
-
-                    sortByKey(sortedPoints, "d");
-
-                    var targetPoint = sortedPoints[0] || new THREE.Vector3(0,0,0);
-                    var vertex = mesh.geometry.vertices[0];
-
-                    vertex.x = targetPoint.x;
-                    vertex.y = targetPoint.y;
-                    vertex.z = targetPoint.z;
-
-                    // Make sure picked points have some space between them
-                    var secondPointIndex = 1;
-                    var tooSmall = true;
-                    while (tooSmall) {
-                        var secondPoint = sortedPoints[ secondPointIndex ];
-                        if (secondPoint) {
-                            var innerDistance = new THREE.Vector3(secondPoint.x, secondPoint.y, secondPoint.z).distanceTo(sortedPoints[0]);
-                            tooSmall = ( innerDistance < 2 );
-                            secondPointIndex++;
-                        } else {
-                            secondPointIndex = 0;
-                            tooSmall = false;
-                        }
-                    }
-
-                    var targetVertex = mesh.geometry.vertices[1];
-                    targetPoint = sortedPoints[ secondPointIndex ] || new THREE.Vector3(0, 0, 0);
-                    targetVertex.x = targetPoint.x;
-                    targetVertex.y = targetPoint.y;
-                    targetVertex.z = targetPoint.z;
-
-                    if (config.mirror) {
-                        // We assume that the mirrored selection geometry has the same index as its parent
-                        var mirrorMesh = selectionMeshesM[i];
-
-                        mirrorMesh.geometry.vertices[0].x = mesh.geometry.vertices[0].x * -1 ;
-                        mirrorMesh.geometry.vertices[0].y = mesh.geometry.vertices[0].y;
-                        mirrorMesh.geometry.vertices[0].z = mesh.geometry.vertices[0].z;
-                        mirrorMesh.geometry.vertices[1].x = mesh.geometry.vertices[1].x * -1;
-                        mirrorMesh.geometry.vertices[1].y = mesh.geometry.vertices[1].y;
-                        mirrorMesh.geometry.vertices[1].z = mesh.geometry.vertices[1].z;
-                        mirrorMesh.geometry.vertices[2].x = mesh.geometry.vertices[2].x * -1;
-                        mirrorMesh.geometry.vertices[2].y = mesh.geometry.vertices[2].y;
-                        mirrorMesh.geometry.vertices[2].z = mesh.geometry.vertices[2].z;
 
                         var vertex = mesh.geometry.vertices[2];
+
+                        var middle = window.innerWidth / 2;
+                        var isRightSide = (vertex.x > 0);
+
+                        var offset = Math.abs(vertex.x);
+                       // offset = 10;
                         vertex.x *= -1;
+/*
+                        if (isRightSide) {
+                            // Flip to Left Side
+                            vertex.x = -offset;
+                        } else {
+                            // Flip to Right Side
+                            vertex.x = offset;
+                        }
+                        */
+                    } else {
+                        var vertex = mesh.geometry.vertices[2];
+                        vertex.x = position.x;
                     }
+
+                    if(doSearch){
+                        var vertex = mesh.geometry.vertices[2];
+                        vertex.y = position.y;
+                        vertex.z = z;
+
+                        var sortedPoints = [];
+                        var nearestPoints = octree.search(vertex,10,false);
+
+                        nearestPoints.forEach(function (object) {
+                            var point = object.vertices;
+                            sortedPoints.push({ x: point.x, y: point.y, z:point.z, d: point.distanceTo(vertex)});
+                        });
+
+                        // search through selection meshes, too
+
+                        if (config.connectToSelf) {
+                            selectionMeshes.forEach(function (mesh) {
+                                if (mesh.touchid != event.id) {
+                                    for (var i = 0; i < 3; i++) {
+                                        var point = mesh.geometry.vertices[i];
+                                        sortedPoints.push({x: point.x, y: point.y, z:point.z, d: point.distanceTo(vertex)});
+                                    }
+                                }
+                            });
+                        }
+
+
+                        sortByKey(sortedPoints, "d");
+
+                        var targetPoint = sortedPoints[0] || new THREE.Vector3(0,0,0);
+                        var vertex = mesh.geometry.vertices[0];
+
+                        vertex.x = targetPoint.x;
+                        vertex.y = targetPoint.y;
+                        vertex.z = targetPoint.z;
+
+                        // Make sure picked points have some space between them
+                        var secondPointIndex = 1;
+                        var tooSmall = true;
+                        while (tooSmall) {
+                            var secondPoint = sortedPoints[ secondPointIndex ];
+                            if (secondPoint) {
+                                var innerDistance = new THREE.Vector3(secondPoint.x, secondPoint.y, secondPoint.z).distanceTo(sortedPoints[0]);
+                                tooSmall = ( innerDistance < 2 );
+                                secondPointIndex++;
+                            } else {
+                                secondPointIndex = 0;
+                                tooSmall = false;
+                            }
+                        }
+
+                        var targetVertex = mesh.geometry.vertices[1];
+                        targetPoint = sortedPoints[ secondPointIndex ] || new THREE.Vector3(0, 0, 0);
+                        targetVertex.x = targetPoint.x;
+                        targetVertex.y = targetPoint.y;
+                        targetVertex.z = targetPoint.z;
+
+                    }
+
                 }
 
             }
@@ -623,32 +623,29 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
                 }
 
             }
-
-            for (var i = 0; i < selectionMeshesM.length; i++) {
-
-                var mesh = selectionMeshesM[i];
-
-                if (mesh.touchid == event.id) {
-                    mesh.geometry.vertices[2].z = z;
-
-                    // add new Mesh to scene
-                    var meshClone = new THREE.Mesh(mesh.geometry.clone(), material);
-                    var meshWire = new THREE.Mesh(mesh.geometry.clone(), materialsWire[4]);
-                    meshWire.position.z += 1.5;
-
-                    // Add the meshes to the scene
-                    var newMeshes = [meshClone, meshWire];
-                    for (m in newMeshes) {
-                        growNewObject(newMeshes[m]);
-                    }
-
-                }
-
-            }
-
             // kill selection meshes once the piece has been grown
             removeSelectionMeshes(event.id);
         }
+    }
+
+    /**
+     * Update cache of all points
+     */
+    function updatePointCache(){
+        allPoints = [];
+
+        // construct allPoints from allMeshes
+        allMeshes.forEach(function (mesh) {
+            mesh.geometry.vertices.forEach(function (vertex) {
+                allPoints.push(vertex);
+            });
+        });
+
+        // clear dupes
+        allPoints = allPoints.filter(function (item, index, inputArray) {
+            return inputArray.indexOf(item) == index;
+        });
+
     }
 
     /**
