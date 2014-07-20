@@ -484,43 +484,22 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
                         doSearch = false;
 
                         var parentMesh = selectionMeshes[i-1];
-                        var parentVertex = parentMesh.geometry.vertices[2];
 
-                        mesh.geometry.vertices[0].x = parentMesh.geometry.vertices[0].x;
+                        mesh.geometry.vertices[0].x = parentMesh.geometry.vertices[0].x * -1;
                         mesh.geometry.vertices[0].y = parentMesh.geometry.vertices[0].y;
                         mesh.geometry.vertices[0].z = parentMesh.geometry.vertices[0].z;
-                        mesh.geometry.vertices[1].x = parentMesh.geometry.vertices[1].x;
+                        mesh.geometry.vertices[1].x = parentMesh.geometry.vertices[1].x * -1;
                         mesh.geometry.vertices[1].y = parentMesh.geometry.vertices[1].y;
                         mesh.geometry.vertices[1].z = parentMesh.geometry.vertices[1].z;
-                        mesh.geometry.vertices[2].x = parentMesh.geometry.vertices[2].x;
+                        mesh.geometry.vertices[2].x = parentMesh.geometry.vertices[2].x * -1;
                         mesh.geometry.vertices[2].y = parentMesh.geometry.vertices[2].y;
                         mesh.geometry.vertices[2].z = parentMesh.geometry.vertices[2].z;
 
-
-                        var vertex = mesh.geometry.vertices[2];
-
-                        var middle = window.innerWidth / 2;
-                        var isRightSide = (vertex.x > 0);
-
-                        var offset = Math.abs(vertex.x);
-                       // offset = 10;
-                        vertex.x *= -1;
-/*
-                        if (isRightSide) {
-                            // Flip to Left Side
-                            vertex.x = -offset;
-                        } else {
-                            // Flip to Right Side
-                            vertex.x = offset;
-                        }
-                        */
-                    } else {
-                        var vertex = mesh.geometry.vertices[2];
-                        vertex.x = position.x;
                     }
 
                     if(doSearch){
                         var vertex = mesh.geometry.vertices[2];
+                        vertex.x = position.x;
                         vertex.y = position.y;
                         vertex.z = z;
 
