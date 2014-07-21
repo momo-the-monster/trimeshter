@@ -44,8 +44,8 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
             depthMax: Infinity, // optional, default = Infinity, infinite depth
             objectsThreshold: 8, // optional, default = 8
             overlapPct: 0.15, // optional, default = 0.15 (15%), this helps sort objects that overlap nodes
-     //       scene: scene // optional, pass scene as parameter only if you wish to visualize octree
-        } );
+            //       scene: scene // optional, pass scene as parameter only if you wish to visualize octree
+        });
     }
 
     /**
@@ -69,9 +69,9 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
                 z: 0.0
             },
             rDrift: {
-               x: 0.0,
-               y: 0.0,
-               z: 0.0
+                x: 0.0,
+                y: 0.0,
+                z: 0.0
             },
             starfield: {
                 bounds: {
@@ -285,7 +285,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
     /**
      * Create starfield particles
      */
-    function initStarfield(){
+    function initStarfield() {
         starfield = new THREE.Object3D();
 
         var star;
@@ -376,13 +376,13 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
     function animate(time) {
 
         framesSinceRebuild++;
-        if(octree && framesSinceRebuild >= waitUntilRebuild){
+        if (octree && framesSinceRebuild >= waitUntilRebuild) {
             octree.rebuild();
             framesSinceRebuild = 0;
         }
 
-      //  if (config.drift.x != 0 || config.drift.y != 0 || config.drift.z != 0) {
-        if(true){
+        //  if (config.drift.x != 0 || config.drift.y != 0 || config.drift.z != 0) {
+        if (true) {
             for (var i = 0; i < allMeshes.length; i++) {
                 var mesh = allMeshes[i];
                 for (var v = 0; v < mesh.geometry.vertices.length; v++) {
@@ -396,12 +396,12 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
                 mesh.geometry.verticesNeedUpdate = true;
             }
 
-            starfield.children.forEach( function(star){
+            starfield.children.forEach(function (star) {
                 star.position.x += config.drift.x;
                 star.position.y += config.drift.y;
                 star.position.z += config.drift.z;
 
-                if(star.position.x > config.starfield.bounds.x){
+                if (star.position.x > config.starfield.bounds.x) {
                     star.position.x = -config.starfield.bounds.x;
                 }
                 if (star.position.x < -config.starfield.bounds.x) {
@@ -442,7 +442,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
         renderer.render(backgroundScene, backgroundCamera);
         renderer.render(scene, camera);
 
-        if(octree){
+        if (octree) {
             octree.update();
         }
         requestAnimationFrame(animate);
@@ -465,7 +465,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
      */
     function onMove(event) {
         var x = event.x * 2 - 1;
-        var y = - event.y * 2 + 1;
+        var y = -event.y * 2 + 1;
         var z = event.z || 0;
         var doSearch = true;
 
@@ -478,58 +478,37 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
                 if (mesh.touchid == event.id) {
 
                     // set third vertex to cursor position
-                    var isEven = ((i+1) % 2 == 0);
+                    var isEven = ((i + 1) % 2 == 0);
 
                     if (i > 0 && isEven && config.mirror) {
                         doSearch = false;
 
-                        var parentMesh = selectionMeshes[i-1];
-                        var parentVertex = parentMesh.geometry.vertices[2];
+                        var parentMesh = selectionMeshes[i - 1];
 
-                        mesh.geometry.vertices[0].x = parentMesh.geometry.vertices[0].x;
+                        mesh.geometry.vertices[0].x = parentMesh.geometry.vertices[0].x * -1;
                         mesh.geometry.vertices[0].y = parentMesh.geometry.vertices[0].y;
                         mesh.geometry.vertices[0].z = parentMesh.geometry.vertices[0].z;
-                        mesh.geometry.vertices[1].x = parentMesh.geometry.vertices[1].x;
+                        mesh.geometry.vertices[1].x = parentMesh.geometry.vertices[1].x * -1;
                         mesh.geometry.vertices[1].y = parentMesh.geometry.vertices[1].y;
                         mesh.geometry.vertices[1].z = parentMesh.geometry.vertices[1].z;
-                        mesh.geometry.vertices[2].x = parentMesh.geometry.vertices[2].x;
+                        mesh.geometry.vertices[2].x = parentMesh.geometry.vertices[2].x * -1;
                         mesh.geometry.vertices[2].y = parentMesh.geometry.vertices[2].y;
                         mesh.geometry.vertices[2].z = parentMesh.geometry.vertices[2].z;
 
-
-                        var vertex = mesh.geometry.vertices[2];
-
-                        var middle = window.innerWidth / 2;
-                        var isRightSide = (vertex.x > 0);
-
-                        var offset = Math.abs(vertex.x);
-                       // offset = 10;
-                        vertex.x *= -1;
-/*
-                        if (isRightSide) {
-                            // Flip to Left Side
-                            vertex.x = -offset;
-                        } else {
-                            // Flip to Right Side
-                            vertex.x = offset;
-                        }
-                        */
-                    } else {
-                        var vertex = mesh.geometry.vertices[2];
-                        vertex.x = position.x;
                     }
 
-                    if(doSearch){
+                    if (doSearch) {
                         var vertex = mesh.geometry.vertices[2];
+                        vertex.x = position.x;
                         vertex.y = position.y;
                         vertex.z = z;
 
                         var sortedPoints = [];
-                        var nearestPoints = octree.search(vertex,10,false);
+                        var nearestPoints = octree.search(vertex, 10, false);
 
                         nearestPoints.forEach(function (object) {
                             var point = object.vertices;
-                            sortedPoints.push({ x: point.x, y: point.y, z:point.z, d: point.distanceTo(vertex)});
+                            sortedPoints.push({ x: point.x, y: point.y, z: point.z, d: point.distanceTo(vertex)});
                         });
 
                         // search through selection meshes, too
@@ -539,7 +518,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
                                 if (mesh.touchid != event.id) {
                                     for (var i = 0; i < 3; i++) {
                                         var point = mesh.geometry.vertices[i];
-                                        sortedPoints.push({x: point.x, y: point.y, z:point.z, d: point.distanceTo(vertex)});
+                                        sortedPoints.push({x: point.x, y: point.y, z: point.z, d: point.distanceTo(vertex)});
                                     }
                                 }
                             });
@@ -548,7 +527,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
 
                         sortByKey(sortedPoints, "d");
 
-                        var targetPoint = sortedPoints[0] || new THREE.Vector3(0,0,0);
+                        var targetPoint = sortedPoints[0] || new THREE.Vector3(0, 0, 0);
                         var vertex = mesh.geometry.vertices[0];
 
                         vertex.x = targetPoint.x;
@@ -631,7 +610,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
     /**
      * Update cache of all points
      */
-    function updatePointCache(){
+    function updatePointCache() {
         allPoints = [];
 
         // construct allPoints from allMeshes
@@ -658,7 +637,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
         allMeshes.push(mesh);
         scene.add(mesh);
 
-        octree.add( mesh, { useVertices: true } );
+        octree.add(mesh, { useVertices: true });
 
         if (config.tween.active) {
 
@@ -708,7 +687,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
         if (idx > -1) {
             allMeshes.splice(idx, 1);
         }
-        octree.remove( tween.target );
+        octree.remove(tween.target);
         scene.remove(tween.target);
     }
 
