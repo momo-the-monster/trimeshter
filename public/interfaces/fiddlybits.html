@@ -1,0 +1,49 @@
+<html>
+<head>
+    <link rel="stylesheet" href="../styles/main.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" user-scalable="no">
+</head>
+<body>
+
+<canvas id="canvas">
+    You really badly need to use a different browser.
+</canvas>
+<div id="address-label"></div>
+
+<!-- Library Includes -->
+<script type="text/javascript" src="../scripts/vendor/three/three.js"></script>
+<script type="text/javascript" src="../scripts/vendor/three/THREEx.WindowResize.js"></script>
+<script type="text/javascript" src="../scripts/vendor/dat.gui.js"></script>
+<script type="text/javascript" src="../scripts/vendor/tween/TweenMax.min.js"></script>
+<script type="text/javascript" src="../scripts/vendor/underscore-1.3.3.min.js"></script>
+<script type="text/javascript" src="../scripts/vendor/socket.io-0.9.10.min.js"></script>
+<script type="text/javascript" src="../scripts/vendor/Tuio.min.js"></script>
+
+<link rel="stylesheet" href="../styles/dat-gui-momo-theme.css"/>
+
+<!-- Source Includes -->
+<script type="text/javascript" src="../scripts/fiddlybits.js"></script>
+<script type="text/javascript" src="../scripts/input/inputTouch.js"></script>
+<script type="text/javascript" src="../scripts/input/inputMouse.js"></script>
+<script type="text/javascript">
+    // Create Interactive Scene
+    var canvas = document.getElementById('canvas');
+    var visuals = new mmm.FiddlyBits(canvas);
+
+    // create params object with all required config settings for inputs
+    var params = {
+        three: visuals.three,
+        onStart: visuals.onStart,
+        onMove: visuals.onMove,
+        onEnd: visuals.onEnd,
+        sendTouches: false,
+        sendMouse: false,
+        element: canvas
+    };
+
+    var touchInput = new mmmInput.TouchInput(params);
+    var mouseCursor = new mmmInput.MouseInput(params);
+
+</script>
+</body>
+</html>
