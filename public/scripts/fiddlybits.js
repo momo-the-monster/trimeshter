@@ -15,6 +15,9 @@ var FiddlyBits = mmm.FiddlyBits = function FiddlyBits(canvas) {
     var cols, rows;
     var filledBoxes = {};
     var cursors = {};
+    var touchToBox = {};
+    var materialsSolid = [];
+    var materialsWire = [];
 
     // FiddlyBits is self-initializing!
     init();
@@ -36,7 +39,12 @@ var FiddlyBits = mmm.FiddlyBits = function FiddlyBits(canvas) {
      */
     function initConfig() {
         return {
-            foo: "bar"
+            boxSize: 64,
+            fadeWait: 3,
+            palette: 0,
+            outline: {
+                fade: 5
+            }
         }
     }
 
@@ -70,8 +78,8 @@ var FiddlyBits = mmm.FiddlyBits = function FiddlyBits(canvas) {
         projector = new THREE.Projector();
         camera.position.z = 1000;
 
-        cols = Math.floor( window.innerWidth / boxSize );
-        rows = Math.floor( window.innerHeight / boxSize );
+        cols = Math.ceil( window.innerWidth / boxSize );
+        rows = Math.ceil( window.innerHeight / boxSize );
 
         // THREEx plugins
         THREEx.WindowResize(renderer, camera);
@@ -124,7 +132,16 @@ var FiddlyBits = mmm.FiddlyBits = function FiddlyBits(canvas) {
             [92, 240, 212]
         ];
 
-        materials = [];
+        var lsd = [
+            [65,255,245],
+            [62,192,197],
+            [59,129,150],
+            [56,65,102],
+            [248,5,96],
+        ];
+
+        materialsSolid = buildMaterials(lsd, false);
+        materialsWire = buildMaterials(lsd, true);
     }
 
     /**
@@ -175,7 +192,7 @@ var FiddlyBits = mmm.FiddlyBits = function FiddlyBits(canvas) {
             new THREE.Vector3(-boxSizeHalf, -boxSizeHalf, 0),
             new THREE.Vector3(-boxSizeHalf,  boxSizeHalf, 0)
         );
-        var material = new THREE.LineBasicMaterial({color:0xff0000, linewidth:1});
+        var material = getRandomMaterial(false).clone();
         var line = new THREE.Line(geometry, material, THREE.LineStrip);
         layer.add(line);
         line.position.set(position.x, position.y, position.z);
@@ -186,24 +203,19 @@ var FiddlyBits = mmm.FiddlyBits = function FiddlyBits(canvas) {
         var info = getPointInfo(position);
 
         var geometry = new THREE.BoxGeometry(boxSize, boxSize, 0);
-        var material = new THREE.MeshBasicMaterial({
-            color:0xff00ff,
-            overdraw: 0.5
-        });
+        var material = getRandomMaterial().clone();
         var mesh = new THREE.Mesh(geometry, material);
         mesh.userData['shrinking'] = false;
         layerFilledBoxes.add(mesh);
         var halfWidth = boxSize / 2;
         mesh.position.set(info.x + halfWidth, info.y + halfWidth, position.z);
         filledBoxes[info.index] = mesh;
-        console.log('adding filled', info.index);
     }
 
     function shrinkBoxAt(index){
         var targetBox = filledBoxes[index];
         if(targetBox != null){
             targetBox.userData['shrinking'] = true;
-            console.log('shrinking filled', index);
         }
     }
 
@@ -231,6 +243,8 @@ var FiddlyBits = mmm.FiddlyBits = function FiddlyBits(canvas) {
             showFilledBox(position);
 
             info = getPointInfo(position);
+
+            touchToBox[event.id] = info.cell;
             cursors[event.id] = {x:event.x, y:event.y, cell:info.index};
 
         }
@@ -246,15 +260,15 @@ var FiddlyBits = mmm.FiddlyBits = function FiddlyBits(canvas) {
         var position = getWorldPosition(event.x, event.y);
         if (position) {
             var info = getPointInfo(position);
+            var touchPreviousBox = touchToBox[event.id];
+
             var cursor = cursors[event.id];
-            if(cursor != null){
-                console.log('new event for id', cursor.cell);
-                if(cursor.cell != info.index){
-                    showFilledBox(position);
-                    addGrowBox(position);
-                    shrinkBoxAt(info.index);
-                    cursors[event.id] = {x:event.x, y:event.y, cell:info.index};
-                }
+            if(touchPreviousBox != info.index){
+                showFilledBox(position);
+                addGrowBox(position);
+                shrinkBoxAt(info.index);
+                touchToBox[event.id] = info.cell;
+                cursors[event.id] = {x:event.x, y:event.y, cell:info.index};
             }
         }
 
@@ -311,6 +325,70 @@ var FiddlyBits = mmm.FiddlyBits = function FiddlyBits(canvas) {
      */
     function getRandomArbitrary(min, max) {
         return Math.random() * (max - min) + min;
+    }
+
+    /**
+     * Generate materials from color palette
+     * @param palette
+     * @param wireframe
+     * @returns {Array}
+     */
+    function buildMaterials(palette, wireframe) {
+
+        var result = [];
+        var width = 256;
+        var height = 256;
+
+        for (var i in palette) {
+            var color = palette[i];
+
+            if(wireframe){
+                result.push(
+                    new THREE.LineBasicMaterial({color:"rgb(" + color[0] + "," + color[1] + "," + color[2] + ")", linewidth:1})
+                )
+            } else {
+
+                // Prepare off-screen canvas
+                var bitmap = document.createElement('canvas');
+                var ctx = bitmap.getContext('2d');
+                bitmap.width = 256;
+                bitmap.height = 256;
+
+                // Draw Gradient
+                var grd = ctx.createLinearGradient(0, 0, 0, height);  //x0, y0, x1, y1
+                grd.addColorStop(0, 'rgba(' + color[0] + ',' + color[1] + ',' + color[2] + ',0)');
+                grd.addColorStop(1, 'rgba(' + color[0] + ',' + color[1] + ',' + color[2] + ',1)');
+
+                ctx.fillStyle = grd;
+                ctx.fillRect(0, 0, width, height);
+
+                var texture = new THREE.Texture(bitmap);
+                texture.needsUpdate = true;
+
+                // Push generated texture into array as Material
+                result.push(
+                    new THREE.MeshBasicMaterial({
+                        transparent: true,
+                        map: texture,
+                        side: THREE.DoubleSide
+                    })
+                );
+            }
+        }
+
+
+
+        return result;
+    }
+
+    function getRandomMaterial(solid) {
+        if(typeof(solid)==='undefined') solid = true;
+
+        if(solid){
+            return materialsSolid[ Math.floor(Math.random() * materialsSolid.length)];
+        } else {
+            return materialsWire[ Math.floor(Math.random() * materialsWire.length)];
+        }
     }
 
     /**
