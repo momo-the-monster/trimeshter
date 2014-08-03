@@ -26,7 +26,7 @@ app.use(express.static('public'));
 
 // Send the client html.
 app.get('/', function(req, res) {
-    res.sendfile(__dirname + '/public/interfaces/fiddlybits.html')
+    res.sendfile(__dirname + '/public/interfaces/touch.html')
 });
 
 app.listen(3456, function () {
