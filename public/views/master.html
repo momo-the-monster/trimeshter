@@ -9,6 +9,7 @@
         You really badly need to use a different browser.
     </canvas>
     <div id="address-label"></div>
+    <div id="recorder" style="display: none;"></div>
 
     <!-- Library Includes -->
     <script type="text/javascript" src="../scripts/vendor/three/three.js"></script>
@@ -27,6 +28,7 @@
 
     <!-- Source Includes -->
     <script type="text/javascript" src="../scripts/trimeshter.js"></script>
+    <script type="text/javascript" src="../scripts/input/inputRecorder.js"></script>
     <script type="text/javascript" src="../scripts/input/inputNetCursor.js"></script>
     <script type="text/javascript" src="../scripts/input/inputLeapPinch.js"></script>
     <script type="text/javascript" src="../scripts/input/inputTouch.js"></script>
@@ -35,6 +37,7 @@
     <script type="text/javascript">
         // Create Trimeshter Interactive Scene
         var canvas = document.getElementById('canvas');
+        var recorderElem = document.getElementById('recorder');
         var trimeshter = new mmm.Trimeshter(canvas);
 
         // create params object with all required config settings for inputs
@@ -45,7 +48,8 @@
             onEnd: trimeshter.onEnd,
             sendTouches: false,
             sendMouse: false,
-            element: canvas
+            element: canvas,
+            dispatcher: canvas
         };
 
         window.leapInput = new mmmInput.LeapInput(params);
@@ -53,6 +57,15 @@
         var touchInput = new mmmInput.TouchInput(params);
         var tuioCursor = new mmmInput.TuioCursor(params);
         var mouseCursor = new mmmInput.MouseInput(params);
+
+        var recorder = new mmmInput.Recorder({
+            element: canvas,
+            dispatcher: recorderElem
+        });
+
+        recorder.dispatcher.addEventListener("cursor.start", trimeshter.onStart, false);
+        recorder.dispatcher.addEventListener("cursor.move", trimeshter.onMove, false);
+        recorder.dispatcher.addEventListener("cursor.end", trimeshter.onEnd, false);
 
         var QueryString = function () {
             var query_string = {};

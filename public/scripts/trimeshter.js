@@ -32,6 +32,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
      */
     function init() {
         config = initConfig();
+     //   initInput();
         gui = initGui();
         initThree();
         initMaterials();
@@ -82,6 +83,15 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
                 count: 1000
             }
         }
+    }
+
+    /**
+     * Add event listeners to canvas
+     */
+    function initInput(){
+        canvas.addEventListener("cursor.start", onStart, false);
+        canvas.addEventListener("cursor.move", onMove, false);
+        canvas.addEventListener("cursor.end", onEnd, false);
     }
 
     /**
@@ -454,6 +464,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
      * @param event has x, y, id
      */
     function onStart(event) {
+        event = event.detail;
         addSelectionMeshes(event.id);
     }
 
@@ -464,6 +475,8 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
      * @param event has x, y, id
      */
     function onMove(event) {
+        event = event.detail;
+
         var x = event.x * 2 - 1;
         var y = -event.y * 2 + 1;
         var z = event.z || 0;
@@ -571,6 +584,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
      * @param event
      */
     function onEnd(event) {
+        event = event.detail;
 
         var x = event.x * 2 - 1;
         var y = -event.y * 2 + 1;

@@ -5,9 +5,7 @@ mmmInput.MouseInput = mmmInput.MouseInput || {};
 var MouseInput = mmmInput.MouseInput = function MouseInput(options) {
     options = options || {};
     this.element = options.element || null;
-    this.onStart = options.onStart || null;
-    this.onMove = options.onMove || null;
-    this.onEnd = options.onEnd || null;
+    this.dispatcher = options.dispatcher || this.element || null;
 
     _.bindAll(this, 'mouseDown', 'mouseMove', 'mouseUp');
 
@@ -21,19 +19,28 @@ var MouseInput = mmmInput.MouseInput = function MouseInput(options) {
 
 MouseInput.prototype.mouseMove = function(event) {
     event.preventDefault();
-    var cursor = this.normalizePoint(event);
-    this.onMove(cursor);
+    this.dispatchEvent("cursor.move", event);
 };
 
 MouseInput.prototype.mouseDown = function(event) {
     event.preventDefault();
-    var cursor = this.normalizePoint(event);
-    this.onStart(cursor);
+    this.dispatchEvent("cursor.start", event);
 };
 
 MouseInput.prototype.mouseUp = function(event) {
-    var cursor = this.normalizePoint(event);
-    this.onEnd(cursor);
+    event.preventDefault();
+    this.dispatchEvent("cursor.end", event);
+};
+
+MouseInput.prototype.dispatchEvent = function(label, source){
+    var event =  new CustomEvent( label,
+        {
+            detail: this.normalizePoint(source),
+            bubbles: false,
+            cancelable: true
+        }
+    );
+    this.dispatcher.dispatchEvent(event);
 };
 
 MouseInput.prototype.normalizePoint = function(event) {
