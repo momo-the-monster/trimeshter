@@ -1,6 +1,6 @@
 var mmm = mmm || {};
 
-var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
+var Trimeshter = mmm.Trimeshter = function Trimeshter(options) {
 
     var camera = {};               // Three.js scene objects
     var renderer = {};
@@ -14,13 +14,15 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
     var materials = [];            // Currently selected material array
     var materialsSolid = [];       // Solid material array, used by default
     var materialsWire = [];        // Wireframe material array, selectable in GUI
-    var canvas = canvas;
+    var canvas = options.canvas;
+    var dispatcher = options.input;
     var gui = {};
     var starfield = {};
     var allPoints = [];
     var octree;
     var framesSinceRebuild = 0;
     var waitUntilRebuild = 30;
+    var bgTexture;
     // Background Scene
     var backgroundScene, backgroundCamera;
 
@@ -32,7 +34,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
      */
     function init() {
         config = initConfig();
-     //   initInput();
+        initInput();
         gui = initGui();
         initThree();
         initMaterials();
@@ -66,7 +68,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
             },
             drift: {
                 x: 0.0,
-                y: -0.1,
+                y: 0.0,
                 z: 0.0
             },
             rDrift: {
@@ -89,9 +91,9 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
      * Add event listeners to canvas
      */
     function initInput(){
-        canvas.addEventListener("cursor.start", onStart, false);
-        canvas.addEventListener("cursor.move", onMove, false);
-        canvas.addEventListener("cursor.end", onEnd, false);
+        dispatcher.addEventListener("cursor.start", onStart, false);
+        dispatcher.addEventListener("cursor.move", onMove, false);
+        dispatcher.addEventListener("cursor.end", onEnd, false);
     }
 
     /**
@@ -164,12 +166,17 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
 
     function initThreeBG() {
         // Load the background texture
-        var texture = THREE.ImageUtils.loadTexture('images/mountainproject.jpg');
+        bgTexture = THREE.ImageUtils.loadTexture('images/sparklysq.jpg');
+        bgTexture.wrapS = bgTexture.wrapT = THREE.MirroredRepeatWrapping;
+        bgTexture.repeat.set(0.5,0.5);
+        bgTexture.needsUpdate = true;
+        var material = new THREE.MeshBasicMaterial({
+            map: bgTexture
+        });
         var backgroundMesh = new THREE.Mesh(
             new THREE.PlaneGeometry(2, 2, 0),
-            new THREE.MeshBasicMaterial({
-                map: texture
-            }));
+            material
+        );
 
         backgroundMesh.material.depthTest = false;
         backgroundMesh.material.depthWrite = false;
@@ -393,6 +400,10 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
 
         //  if (config.drift.x != 0 || config.drift.y != 0 || config.drift.z != 0) {
         if (true) {
+            //   bgTexture.offset.y += config.drift.y;
+            bgTexture.offset.x -= config.drift.x * 0.002;
+            bgTexture.offset.y -= config.drift.y * 0.002;
+
             for (var i = 0; i < allMeshes.length; i++) {
                 var mesh = allMeshes[i];
                 for (var v = 0; v < mesh.geometry.vertices.length; v++) {
@@ -766,6 +777,8 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(canvas) {
         onMove: onMove,
         onEnd: onEnd,
         starfield: starfield,
+        canvas: canvas,
+        dispatcher: dispatcher,
         config: config,
         three: {
             renderer: renderer,
