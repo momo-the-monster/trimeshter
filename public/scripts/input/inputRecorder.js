@@ -8,14 +8,27 @@ var Recorder = mmmInput.Recorder = function Recorder(options) {
     this.element = options.element || null;
     this.dispatcher = options.dispatcher || null;
     this.nextId = 0;
+    this.timeline = null;
+
     this.timeline = new TimelineMax({
-            repeat:-1,
-            onRepeat:function(){
-                this.nextId++;
-            }
-        });
-    this.timeline.add(function(){console.log('the end')}, 10);
-    this.timeline.play();
+        repeat: -1,
+        onRepeat: function () {
+            this.nextId++;
+        }
+    });
+    this.timeline.add(function () {
+        console.log('the end')
+    }, 13.695);
+
+    this.sound = new Howl({
+        src: ['../audio/tychowalkloop.ogg'],
+        loop: true,
+        onplay: this.timeline.play
+    });
+
+    setInterval(this.matchTimelineToAudio.bind(this), 400);
+
+    this.sound.play();
 
     // listen for cursor events
     if (this.element !== null) {
@@ -23,6 +36,10 @@ var Recorder = mmmInput.Recorder = function Recorder(options) {
         this.element.addEventListener("cursor.move", this.onMove.bind(this), false);
         this.element.addEventListener("cursor.end", this.onEnd.bind(this), false);
     }
+};
+
+Recorder.prototype.matchTimelineToAudio = function(){
+    this.timeline.time(this.sound.seek() % this.sound._duration);
 };
 
 Recorder.prototype.onStart = function(event) {
