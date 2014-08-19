@@ -23,6 +23,7 @@
     <script type="text/javascript" src="../scripts/vendor/underscore-1.3.3.min.js"></script>
     <script type="text/javascript" src="../scripts/vendor/socket.io-0.9.10.min.js"></script>
     <script type="text/javascript" src="../scripts/vendor/Tuio.min.js"></script>
+    <script type="text/javascript" src="../scripts/vendor/howler.min.js"></script>
 
     <link rel="stylesheet" href="../styles/dat-gui-momo-theme.css"/>
 
@@ -35,10 +36,20 @@
     <script type="text/javascript" src="../scripts/input/inputTuio.js"></script>
     <script type="text/javascript" src="../scripts/input/inputMouse.js"></script>
     <script type="text/javascript">
+
         // Create Trimeshter Interactive Scene
         var canvas = document.getElementById('canvas');
         var recorderElem = document.getElementById('recorder');
-        var trimeshter = new mmm.Trimeshter(canvas);
+
+        var recorder = new mmmInput.Recorder({
+            element: canvas,
+            dispatcher: recorderElem
+        });
+
+        var trimeshter = new mmm.Trimeshter({
+            canvas: canvas,
+            input: recorder.dispatcher
+        });
 
         // create params object with all required config settings for inputs
         var params = {
@@ -57,15 +68,6 @@
         var touchInput = new mmmInput.TouchInput(params);
         var tuioCursor = new mmmInput.TuioCursor(params);
         var mouseCursor = new mmmInput.MouseInput(params);
-
-        var recorder = new mmmInput.Recorder({
-            element: canvas,
-            dispatcher: recorderElem
-        });
-
-        recorder.dispatcher.addEventListener("cursor.start", trimeshter.onStart, false);
-        recorder.dispatcher.addEventListener("cursor.move", trimeshter.onMove, false);
-        recorder.dispatcher.addEventListener("cursor.end", trimeshter.onEnd, false);
 
         var QueryString = function () {
             var query_string = {};
