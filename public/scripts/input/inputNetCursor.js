@@ -5,6 +5,7 @@ mmmInput.NetCursor = mmmInput.NetCursor || {};
 var NetCursor = mmmInput.NetCursor = function NetCursor(options) {
     options = options || {};
     this.element = options.element || null;
+    this.dispatcher = options.dispatcher || this.element || null;
     this.autoConnect = options.autoConnect | true;
     this.connected = false;
     this.cursors = {};
@@ -136,24 +137,40 @@ NetCursor.prototype.touchToCursor = function(touch){
 };
 
 NetCursor.prototype.processCursorStart = function( cursor ){
-    if(this.onStart){
-        this.onStart(cursor);
-    }
+    this.dispatchEventFromCursor('cursor.start', cursor);
     this.cursors[cursor.id] = cursor;
 };
 
 NetCursor.prototype.processCursorMove = function (cursor) {
+    this.dispatchEventFromCursor('cursor.move', cursor);
     if(this.cursors[cursor.id] !== undefined){
-        if(this.onMove){
-            this.onMove(cursor);
-        }
         this.cursors[cursor.id] = cursor;
     }
 };
 
 NetCursor.prototype.processCursorEnd = function (cursor) {
-    if(this.onEnd){
-        this.onEnd(cursor);
-    }
+    this.dispatchEventFromCursor('cursor.end', cursor);
     delete this.cursors[cursor.id];
+};
+
+NetCursor.prototype.dispatchEventFromCursor = function(label, source){
+    var event = new CustomEvent(label,
+        {
+            detail: source,
+            bubbles: false,
+            cancelable: true
+        }
+    );
+    this.dispatcher.dispatchEvent(event);
+};
+
+NetCursor.prototype.dispatchEvent = function (label, source) {
+    var event = new CustomEvent(label,
+        {
+            detail: this.normalizePoint(source),
+            bubbles: false,
+            cancelable: true
+        }
+    );
+    this.dispatcher.dispatchEvent(event);
 };

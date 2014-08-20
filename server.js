@@ -1,5 +1,6 @@
 var express = require('express.io');
 var tuio = require("tuio");
+
 app = express();
 app.http().io();
 
@@ -28,7 +29,6 @@ app.use(express.static('public'));
 app.get('/', function(req, res) {
     res.sendfile(__dirname + '/public/interfaces/touch.html')
 });
-
 app.listen(3456, function () {
     require('dns').lookup(require('os').hostname(), function (err, add, fam) {
         serverPort = 3456;
@@ -37,8 +37,9 @@ app.listen(3456, function () {
     });
 });
 
+
 tuio.init({
-    oscPort: 3333,
+    oscPort: 3334,
     oscHost: "0.0.0.0",
     socketPort: 5000
 });

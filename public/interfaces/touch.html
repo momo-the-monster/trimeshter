@@ -68,9 +68,7 @@
         var canvas = document.getElementById('canvas');
         window.netCursor = new mmmInput.NetCursor({
             element: canvas,
-            onStart: onStart,
-            onMove: onMove,
-            onEnd: onEnd,
+            dispatcher: canvas,
             sendTouches: true,
             sendMouse: true
         });
@@ -87,6 +85,9 @@
         canvas.addEventListener("touchcancel", onTouchEnd, false);
         canvas.addEventListener("touchleave", onTouchEnd, false);
         canvas.addEventListener("touchmove", onTouchMove, false);
+        canvas.addEventListener("cursor.start", onStart, false);
+        canvas.addEventListener("cursor.move", onMove, false);
+        canvas.addEventListener("cursor.end", onEnd, false);
     }
 
     function onStart(cursor) {
