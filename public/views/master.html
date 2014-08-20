@@ -8,8 +8,10 @@
     <canvas id="canvas" width="1920" height="1080">
         You really badly need to use a different browser.
     </canvas>
+    <!--
     <div id="address-label"></div>
     <div id="recorder" style="display: none;"></div>
+    -->
 
     <!-- Library Includes -->
     <script type="text/javascript" src="../scripts/vendor/three/three.js"></script>
@@ -32,10 +34,10 @@
     <script type="text/javascript" src="../scripts/input/inputRecorder.js"></script>
     <script type="text/javascript" src="../scripts/input/inputNetCursor.js"></script>
     <script type="text/javascript" src="../scripts/input/inputLeapPinch.js"></script>
-    <script type="text/javascript" src="../scripts/input/inputTouch.js"></script>
     <script type="text/javascript" src="../scripts/input/inputTuio.js"></script>
     <script type="text/javascript" src="../scripts/input/inputMouse.js"></script>
     <script type="text/javascript" src="../scripts/input/inputMyo.js"></script>
+    <script type="text/javascript" src="../scripts/input/inputTouch.js"></script>
     <script type="text/javascript">
 
         // Create Trimeshter Interactive Scene
@@ -53,12 +55,10 @@
             input: canvas
         });
 
+
         // create params object with all required config settings for inputs
         var params = {
             three: trimeshter.three,
-            onStart: trimeshter.onStart,
-            onMove: trimeshter.onMove,
-            onEnd: trimeshter.onEnd,
             sendTouches: false,
             sendMouse: false,
             element: canvas,
@@ -68,11 +68,11 @@
 
 //        window.leapInput = new mmmInput.LeapInput(params);
 //        var netCursor = new mmmInput.NetCursor(params);
-//        var touchInput = new mmmInput.TouchInput(params);
-        var tuioCursor = new mmmInput.TuioCursor(params);
+        var touchInput = new mmmInput.TouchInput(params);
+//        var tuioCursor = new mmmInput.TuioCursor(params);
         var mouseCursor = new mmmInput.MouseInput(params);
         var myo = new mmmInput.MyoInput(params);
-
+/*
         var QueryString = function () {
             var query_string = {};
             var query = window.location.search.substring(1);
@@ -98,7 +98,7 @@
         var port = QueryString.port || '';
 
         document.getElementById('address-label').innerHTML = host + ":" + port;
-
+*/
     </script>
 </body>
 </html>
