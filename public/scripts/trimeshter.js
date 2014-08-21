@@ -123,14 +123,14 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(options) {
 
         var guiDrift = gui.addFolder("Drift");
         guiDrift.add(config.drift, 'x', -1, 1);
-        guiDrift.add(config.drift, 'y', -1, 1);
-        guiDrift.add(config.drift, 'z', -3, 0.1);
+        guiDrift.add(config.drift, 'y', -1, 1).listen();
+        guiDrift.add(config.drift, 'z', -3, 0.1).listen();
         guiDrift.open();
 
         var guiRDrift = gui.addFolder("Rotate");
         guiRDrift.add(config.rDrift, 'x', -1, 1);
         guiRDrift.add(config.rDrift, 'y', -1, 1);
-        guiRDrift.add(config.rDrift, 'z', -3, 0.1);
+        guiRDrift.add(config.rDrift, 'z', -3, 3).listen();
         guiRDrift.open();
 
         return gui;

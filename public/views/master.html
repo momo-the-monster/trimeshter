@@ -35,6 +35,7 @@
     <script type="text/javascript" src="../scripts/input/inputTouch.js"></script>
     <script type="text/javascript" src="../scripts/input/inputTuio.js"></script>
     <script type="text/javascript" src="../scripts/input/inputMouse.js"></script>
+    <script type="text/javascript" src="../scripts/input/inputMyo.js"></script>
     <script type="text/javascript">
 
         // Create Trimeshter Interactive Scene
@@ -60,7 +61,8 @@
             sendTouches: false,
             sendMouse: false,
             element: canvas,
-            dispatcher: canvas
+            dispatcher: canvas,
+            config: trimeshter.config
         };
 
         window.leapInput = new mmmInput.LeapInput(params);
@@ -68,6 +70,7 @@
         var touchInput = new mmmInput.TouchInput(params);
         var tuioCursor = new mmmInput.TuioCursor(params);
         var mouseCursor = new mmmInput.MouseInput(params);
+        var myo = new mmmInput.MyoInput(params);
 
         var QueryString = function () {
             var query_string = {};
