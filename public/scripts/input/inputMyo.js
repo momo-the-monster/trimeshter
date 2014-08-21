@@ -49,13 +49,12 @@ var MyoInput = mmmInput.MyoInput = function MyoInput(options) {
 };
 
 MyoInput.prototype.onPose = function(pose) {
-   // console.log(pose);
     if(pose === "fist"){
         this.movementLocked = false;
     } else if(pose === "rest"){
         this.oPrev.x = this.oPrev.y = this.oPrev.z = 0;
         this.movementLocked = true;
-    } else if(pose === "thumb_to_pinky"){
+    } else if(pose === "fingers_spread"){
         this.config.drift.x = this.config.drift.y = this.config.drift.z = 0;
     }
 };
