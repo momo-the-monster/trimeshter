@@ -5,9 +5,9 @@ mmmInput.TuioCursor = mmmInput.TuioCursor || {};
 var TuioCursor = mmmInput.TuioCursor = function TuioCursor(options) {
     // Injections from Scene
     options = options || {};
-    this.onStart = options.onStart || null;
-    this.onMove = options.onMove || null;
-    this.onEnd = options.onEnd || null;
+    this.element = options.element || null;
+    this.dispatcher = options.dispatcher || this.element || null;
+
     var client = new Tuio.Client({
             host: "http://localhost:5000"
         });
@@ -36,22 +36,26 @@ TuioCursor.prototype.cursorToTouch = function(cursor){
 };
 
 TuioCursor.prototype.onAddTuioCursor = function(cursor){
-    var touch = this.cursorToTouch(cursor);
-    if(this.onStart){
-        this.onStart(touch);
-    }
+    this.dispatchEvent("cursor.start", cursor);
+    this.dispatchEvent("cursor.move", cursor);
 };
 
 TuioCursor.prototype.onUpdateTuioCursor = function(cursor){
-    var touch = this.cursorToTouch(cursor);
-    if(this.onMove){
-        this.onMove(touch);
-    }
+    this.dispatchEvent("cursor.move", cursor);
 };
 
 TuioCursor.prototype.onRemoveTuioCursor = function(cursor){
-    var touch = this.cursorToTouch(cursor);
-    if(this.onEnd){
-        this.onEnd(touch);
-    }
+    this.dispatchEvent("cursor.end", cursor);
+};
+
+TuioCursor.prototype.dispatchEvent = function (label, source) {
+    console.log(label, source.sessionId);
+    var event = new CustomEvent(label,
+        {
+            detail: this.cursorToTouch(source),
+            bubbles: false,
+            cancelable: true
+        }
+    );
+    this.dispatcher.dispatchEvent(event);
 };

@@ -9,19 +9,22 @@ var Recorder = mmmInput.Recorder = function Recorder(options) {
     this.dispatcher = options.dispatcher || null;
     this.nextId = 0;
     this.timeline = null;
-
+    this.maxId = 0;
+    var self = this;
     this.timeline = new TimelineMax({
         repeat: -1,
         onRepeat: function () {
-            this.nextId++;
+            self.nextId = self.maxId + 1;
+            console.log('new nextId is', self.nextId);
         }
     });
+    // TODO: detect audio length, set timeline to be that long
     this.timeline.add(function () {
         console.log('the end')
-    }, 13.695);
+    }, 20.283);
 
     this.sound = new Howl({
-        src: ['../audio/tychowalkloop.ogg'],
+        src: ['../audio/get-you-loop.ogg'],
         loop: true,
         onplay: this.timeline.play
     });
@@ -59,6 +62,7 @@ Recorder.prototype.onMove = function(event) {
 
 Recorder.prototype.onEnd = function(event) {
     event.detail.id += this.nextId;
+    this.maxId = Math.max(this.maxId, event.detail.id);
     this.timeline.addCallback(function(){
         this.dispatchEvent(event);
     }, this.timeline.time(), null, this);

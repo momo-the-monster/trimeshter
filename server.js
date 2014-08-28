@@ -29,6 +29,11 @@ app.use(express.static('public'));
 app.get('/', function(req, res) {
     res.sendfile(__dirname + '/public/interfaces/touch.html')
 });
+
+app.get('/camera', function(req, res){
+    res.sendfile(__dirname + '/public/views/camera.html');
+});
+
 app.listen(3456, function () {
     require('dns').lookup(require('os').hostname(), function (err, add, fam) {
         serverPort = 3456;
@@ -39,7 +44,7 @@ app.listen(3456, function () {
 
 
 tuio.init({
-    oscPort: 3334,
+    oscPort: 3333,
     oscHost: "0.0.0.0",
     socketPort: 5000
 });

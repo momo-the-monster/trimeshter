@@ -1,25 +1,75 @@
-<!DOCTYPE html>
-<html style="overflow: hidden; margin:0; padding: 0">
-    <head lang="en">
-        <meta charset="UTF-8">
-        <title></title>
+<html>
+<head>
+    <link rel="stylesheet" href="../styles/main.css"/>
+    <meta name="viewport" content="width=device-width" user-scalable="no">
+</head>
+<body onload="startup()">
 
-    </head>
-    <body style="margin:0; padding: 0" background="#ffffff">
-        <!-- Library Includes -->
-        <script type="text/javascript" src="../scripts/vendor/jquery-1.8.1.min.js"></script>
-        <script type="text/javascript" src="../scripts/vendor/tween/TweenMax.min.js"></script>
-        <script type="text/javascript" src="../scripts/vendor/dat.gui.min.js"></script>
-        <script type="text/javascript" src="../scripts/vendor/three/three.min.js"></script>
-        <script type="text/javascript" src="../scripts/vendor/three/THREEx.WindowResize.js"></script>
-        <script type="text/javascript" src="../scripts/vendor/underscore-1.3.3.min.js"></script>
-        <script type="text/javascript" src="../scripts/vendor/socket.io-0.9.10.min.js"></script>
-        <script type="text/javascript" src="../scripts/vendor/caress-0.1.0.js"></script>
+<canvas id="canvas" width="1920" height="1080">
+    You really badly need to use a different browser.
+</canvas>
+<div id="empty" style="display:none"></div>
 
-        <!-- Source Includes -->
-        <script type="text/javascript" src="../scripts/input/inputWS.js"></script>
-        <script type="text/javascript" src="../scripts/input/inputTouch.js"></script>
-        <script type="text/javascript" src="../scripts/trimeshter.js"></script>
+<!-- Library Includes -->
+<script type="text/javascript" src="../scripts/vendor/three/three.js"></script>
+<script type="text/javascript" src="../scripts/vendor/three/THREEx.WindowResize.js"></script>
+<script type="text/javascript" src="../scripts/vendor/three/threeoctree.min.js"></script>
+<script type="text/javascript" src="../scripts/vendor/dat.gui.js"></script>
+<script type="text/javascript" src="../scripts/vendor/leap/leap-0.6.0.min.js"></script>
+<script type="text/javascript" src="../scripts/vendor/leap/leap-plugins-0.1.6.min.js"></script>
+<script type="text/javascript" src="../scripts/vendor/leap/leap.rigged-hand-0.1.4.js"></script>
+<script type="text/javascript" src="../scripts/vendor/tween/TweenMax.min.js"></script>
+<script type="text/javascript" src="../scripts/vendor/underscore-1.3.3.min.js"></script>
+<script type="text/javascript" src="../scripts/vendor/socket.io-0.9.10.min.js"></script>
+<script type="text/javascript" src="../scripts/vendor/Tuio.min.js"></script>
+<script type="text/javascript" src="../scripts/vendor/howler.min.js"></script>
 
-    </body>
+<link rel="stylesheet" href="../styles/dat-gui-momo-theme.css"/>
+
+<!-- Source Includes -->
+<script type="text/javascript" src="../scripts/trimeshter.js"></script>
+<script type="text/javascript" src="../scripts/input/inputTouch.js"></script>
+<script type="text/javascript">
+
+    function startup() {
+
+        // Create Trimeshter Interactive Scene
+        var canvas = document.getElementById('canvas');
+        var empty = document.getElementById('empty');
+
+        // create params object with all required config settings for inputs
+        var params = {
+            element: canvas,
+            dispatcher: canvas
+        };
+
+        var touchInput = new mmmInput.TouchInput(params);
+
+/*
+         var trimeshter = new mmm.Trimeshter({
+         canvas: canvas,
+         input: empty
+         });
+         */
+
+        canvas.addEventListener("cursor.start", onStart, false);
+        canvas.addEventListener("cursor.move", onMove, false);
+        canvas.addEventListener("cursor.end", onEnd, false);
+    }
+
+    function onStart(cursor){
+
+    }
+
+    function onMove(cursor) {
+
+    }
+
+    function onEnd(cursor) {
+
+    }
+
+
+</script>
+</body>
 </html>

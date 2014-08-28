@@ -56,6 +56,7 @@ MyoInput.prototype.onPose = function(pose) {
         this.movementLocked = true;
     } else if(pose === "fingers_spread"){
         this.config.drift.x = this.config.drift.y = this.config.drift.z = 0;
+        this.config.drift.z = 0.1;
     }
 };
 

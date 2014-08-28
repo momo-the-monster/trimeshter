@@ -475,8 +475,8 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(options) {
      * @param event has x, y, id
      */
     function onStart(event) {
-        event = event.detail;
-        addSelectionMeshes(event.id);
+    //    event.preventDefault();
+        addSelectionMeshes(event.detail.id);
     }
 
     /**
@@ -486,11 +486,12 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(options) {
      * @param event has x, y, id
      */
     function onMove(event) {
-        event = event.detail;
+    //    event.preventDefault();
+        var cursor = event.detail;
 
-        var x = event.x * 2 - 1;
-        var y = -event.y * 2 + 1;
-        var z = event.z || 0;
+        var x = cursor.x * 2 - 1;
+        var y = -cursor.y * 2 + 1;
+        var z = cursor.z || 0;
         var doSearch = true;
 
         var position = getWorldPosition(x, y);
@@ -499,7 +500,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(options) {
 
                 var mesh = selectionMeshes[i];
 
-                if (mesh.touchid == event.id) {
+                if (mesh.touchid == cursor.id) {
 
                     // set third vertex to cursor position
                     var isEven = ((i + 1) % 2 == 0);
@@ -539,7 +540,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(options) {
 
                         if (config.connectToSelf) {
                             selectionMeshes.forEach(function (mesh) {
-                                if (mesh.touchid != event.id) {
+                                if (mesh.touchid != cursor.id) {
                                     for (var i = 0; i < 3; i++) {
                                         var point = mesh.geometry.vertices[i];
                                         sortedPoints.push({x: point.x, y: point.y, z: point.z, d: point.distanceTo(vertex)});
@@ -595,11 +596,12 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(options) {
      * @param event
      */
     function onEnd(event) {
-        event = event.detail;
+     //   event.preventDefault();
+        var cursor = event.detail;
 
-        var x = event.x * 2 - 1;
-        var y = -event.y * 2 + 1;
-        var z = event.z || getRandomArbitrary(config.randomZ, -config.randomZ);
+        var x = cursor.x * 2 - 1;
+        var y = -cursor.y * 2 + 1;
+        var z = cursor.z || getRandomArbitrary(config.randomZ, -config.randomZ);
         var self = this;    // store this for use in Tween functions below
 
         var position = getWorldPosition(x, y);
@@ -610,7 +612,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(options) {
 
                 var mesh = selectionMeshes[i];
 
-                if (mesh.touchid == event.id) {
+                if (mesh.touchid == cursor.id) {
                     mesh.geometry.vertices[2].z = z;
 
                     // add new Mesh to scene
@@ -628,7 +630,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(options) {
 
             }
             // kill selection meshes once the piece has been grown
-            removeSelectionMeshes(event.id);
+            removeSelectionMeshes(cursor.id);
         }
     }
 

@@ -4,11 +4,9 @@ mmmInput.TouchInput = mmmInput.TouchInput || {};
 
 var TouchInput = mmmInput.TouchInput = function TouchInput(options) {
     options = options || {};
-    this.element = options.element || null;
     this.ongoingTouches = [];
-    this.onStart = options.onStart || null;
-    this.onMove = options.onMove || null;
-    this.onEnd = options.onEnd || null;
+    this.element = options.element || null;
+    this.dispatcher = options.dispatcher || this.element || null;
 
     _.bindAll(this, 'onTouchStart', 'onTouchEnd', 'onTouchMove', 'onTouchCancel');
 
@@ -24,63 +22,41 @@ var TouchInput = mmmInput.TouchInput = function TouchInput(options) {
 
 // Touch handling adapted from https://developer.mozilla.org/en-US/docs/Web/Guide/Events/Touch_events
 TouchInput.prototype.onTouchStart = function(evt) {
-    evt.preventDefault();
+//    evt.preventDefault();
     var touches = evt.changedTouches;
 
     for (var i = 0; i < touches.length; i++) {
-        this.ongoingTouches.push(this.copyTouch(touches[i]));
-        var cursor = this.normalizeTouch(touches[i]);
-        this.onStart(cursor);
-        this.onMove(cursor);
+        console.log('start', touches[i]);
     }
 };
 
 TouchInput.prototype.onTouchMove = function(evt) {
-    evt.preventDefault();
+    console.log('one big move');
+//    evt.preventDefault();
     var touches = evt.changedTouches;
     for (var i = 0; i < touches.length; i++) {
-        var idx = this.ongoingTouchIndexById(touches[i].identifier);
-        if (idx >= 0) {
-            var cursor = this.normalizeTouch(touches[i]);
-            this.onMove(cursor);
-            this.ongoingTouches.splice(idx, 1, this.copyTouch(touches[i]));  // swap in the new touch record
-        } else {
-            console.log("can't figure out which touch to continue");
-        }
+        console.log('move', touches[i]);
     }
 };
 
 TouchInput.prototype.onTouchEnd = function(evt) {
-    evt.preventDefault();
+//    evt.preventDefault();
     var touches = evt.changedTouches;
-
     for (var i = 0; i < touches.length; i++) {
-        var idx = this.ongoingTouchIndexById(touches[i].identifier);
-
-        if (idx >= 0) {
-            var cursor = this.normalizeTouch(touches[i]);
-            this.onEnd(cursor);
-            this.ongoingTouches.splice(idx, 1);  // remove it; we're done
-        } else {
-            console.log("can't figure out which touch to end");
-        }
+        console.log('end', touches[i]);
     }
 };
 
 TouchInput.prototype.onTouchCancel = function(evt) {
-    evt.preventDefault();
+//    evt.preventDefault();
     var touches = evt.changedTouches;
-
     for (var i = 0; i < touches.length; i++) {
-        this.ongoingTouches.splice(i, 1);  // remove it; we're done
+        console.log('cancel', touches[i]);
     }
 };
 
-TouchInput.prototype.copyTouch = function(touch) {
-    return { identifier: touch.identifier, clientX: touch.clientX, clientY: touch.clientY };
-};
-
 TouchInput.prototype.normalizeTouch = function(touch) {
+    console.log(touch);
     return {
         x: touch.clientX / window.innerWidth,
         y: touch.clientY / window.innerHeight,
@@ -88,13 +64,16 @@ TouchInput.prototype.normalizeTouch = function(touch) {
     }
 };
 
-TouchInput.prototype.ongoingTouchIndexById = function(idToFind) {
-    for (var i = 0; i < this.ongoingTouches.length; i++) {
-        var id = this.ongoingTouches[i].identifier;
-
-        if (id == idToFind) {
-            return i;
+TouchInput.prototype.dispatchEvent = function (label, source) {
+    var cursor = this.normalizeTouch(source);
+    console.log('touch', label, cursor.id);
+    var event = new CustomEvent(label,
+        {
+            detail: cursor,
+            bubbles: false,
+            cancelable: true
         }
-    }
-    return -1;    // not found
+    );
+ //   console.log('dispatching', event);
+    this.dispatcher.dispatchEvent(event);
 };
