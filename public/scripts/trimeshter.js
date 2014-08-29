@@ -35,7 +35,7 @@ var Trimeshter = mmm.Trimeshter = function Trimeshter(options) {
     function init() {
         config = initConfig();
         initInput();
-        gui = initGui();
+    //    gui = initGui();
         initThree();
         initMaterials();
         initStarfield();
